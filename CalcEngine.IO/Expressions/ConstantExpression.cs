@@ -1,13 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace CalcEngine.IO.Expressions
+﻿namespace CalcEngine.IO.Expressions
 {
     // 定数式の具象クラス
-    public class ConstantExpression<T> : IExpression<T, T>
+    public class ConstantExpression<T> : IExpression<T, T> where T : struct, IConvertible
     {
         private readonly T _value;
 
@@ -36,7 +30,7 @@ namespace CalcEngine.IO.Expressions
         /// <returns>定数の文字列表現。</returns>
         public override string ToString()
         {
-            return _value?.ToString() ?? string.Empty;
+            return _value.ToString();
         }
     }
 }

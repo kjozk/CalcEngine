@@ -1,7 +1,7 @@
 ﻿namespace CalcEngine.IO.Expressions
 {
     // 四則演算クラス
-    public class ArithmeticExpression<T> : IExpression<T, T>
+    public class ArithmeticExpression<T> : IExpression<T, T> where T : struct, IConvertible
     {
         private readonly IExpression<T, T> _left;
         private readonly IExpression<T, T> _right;

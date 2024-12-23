@@ -33,18 +33,40 @@ namespace CalcEngine.IO
         /// <exception cref="SyntaxErrorException">数式の構文が無効な場合にスローされます。</exception>
         public static IExpression<double, double> ParseArithmeticExpression(string expression)
         {
+            // 数式文字列をトークンに分割
             var tokens = Tokenize(expression);
-            Stack<IExpression<double, double>> operandStack = new Stack<IExpression<double, double>>();
-            Stack<string> operatorStack = new Stack<string>();
+            var operandStack = new Stack<IExpression<double, double>>();
+            var operatorStack = new Stack<string>();
+            var parenthesisStack = new Stack<string>();
 
             foreach (var token in tokens)
             {
+                // トークンが数値の場合、オペランドスタックにプッシュ
                 if (double.TryParse(token, out double number))
                 {
                     operandStack.Push(new ConstantExpression<double>(number));
                 }
+                // トークンが開きカッコの場合、スタックにプッシュ
+                else if (token == "(")
+                {
+                    parenthesisStack.Push(token);
+                }
+                // トークンが閉じカッコの場合、開きカッコに出会うまで演算子を適用
+                else if (token == ")")
+                {
+                    while (parenthesisStack.Count > 0 && parenthesisStack.Peek() != "(")
+                    {
+                        ApplyOperator(operandStack, operatorStack.Pop());
+                    }
+                    if (parenthesisStack.Count == 0 || parenthesisStack.Pop() != "(")
+                    {
+                        throw new SyntaxErrorException("数式の構文が無効です。");
+                    }
+                }
+                // トークンが演算子の場合、演算子スタックにプッシュ
                 else if (ArithmeticOperators.Any(op => op.Symbol == token))
                 {
+                    // 演算子の優先順位を考慮して演算子を適用
                     while (operatorStack.Count > 0 && HasHigherPrecedence(operatorStack.Peek(), token))
                     {
                         ApplyOperator(operandStack, operatorStack.Pop());
@@ -53,20 +75,24 @@ namespace CalcEngine.IO
                 }
                 else
                 {
+                    // 無効なトークンの場合、例外をスロー
                     throw new SyntaxErrorException($"無効なトークン: {token}");
                 }
             }
 
+            // 残りの演算子をすべて適用
             while (operatorStack.Count > 0)
             {
                 ApplyOperator(operandStack, operatorStack.Pop());
             }
 
+            // 最終的な結果が1つのオペランドでなければ、構文エラー
             if (operandStack.Count != 1)
             {
                 throw new SyntaxErrorException("数式の構文が無効です。");
             }
 
+            // 最終結果を返す
             return operandStack.Pop();
         }
 
@@ -83,31 +109,36 @@ namespace CalcEngine.IO
 
             foreach (var ch in expression)
             {
+                // 数字または小数点の場合、現在の数値トークンに追加
                 if (char.IsDigit(ch) || ch == '.')
                 {
                     number.Append(ch);
                     lastCharWasOperator = false;
                 }
-                else
+                else if (!char.IsWhiteSpace(ch))
                 {
+                    // 数値トークンが存在する場合、トークンリストに追加
                     if (number.Length > 0)
                     {
                         tokens.Add(number.ToString());
                         number.Clear();
                     }
 
+                    // マイナス記号が演算子の直後に来た場合、負の数として扱う
                     if (ch == '-' && lastCharWasOperator)
                     {
                         number.Append(ch);
                     }
                     else
                     {
+                        // その他の演算子をトークンリストに追加
                         tokens.Add(ch.ToString());
                         lastCharWasOperator = true;
                     }
                 }
             }
 
+            // 最後の数値トークンをトークンリストに追加
             if (number.Length > 0)
             {
                 tokens.Add(number.ToString());
