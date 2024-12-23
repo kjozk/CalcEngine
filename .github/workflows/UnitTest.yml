@@ -1,0 +1,34 @@
+name: Build and Test
+
+on:
+  push:
+    branches:
+      - main  # mainブランチへのpushをトリガー
+      - develop  # developブランチへのpushもトリガーに追加可能
+
+jobs:
+  build:
+    runs-on: windows-latest  # Windows環境で実行
+
+    steps:
+      # リポジトリをチェックアウト
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # .NET Core SDKをセットアップ
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '7.x'  # 必要な.NET SDKのバージョンを指定
+
+      # CalcEngine.IO.csprojをビルド
+      - name: Build CalcEngine.IO
+        run: dotnet build CalcEngine.IO/CalcEngine.IO.csproj --configuration Release
+
+      # CalcEngine.Test.csprojをビルド
+      - name: Build CalcEngine.Test
+        run: dotnet build CalcEngine.Test/CalcEngine.Test.csproj --configuration Release
+
+      # 単体テストの実行
+      - name: Run tests
+        run: dotnet test CalcEngine.Test/CalcEngine.Test.csproj --configuration Release --no-build
