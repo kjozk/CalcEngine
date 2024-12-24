@@ -4,7 +4,7 @@
     public class ConstantExpression<T> : IExpression<T>
         where T : struct, IConvertible
     {
-        private readonly T _value;
+        private T Value { get; }
 
         /// <summary>
         /// ConstantExpression クラスのインスタンスを初期化します。
@@ -12,7 +12,7 @@
         /// <param name="value">定数の値。</param>
         public ConstantExpression(T value)
         {
-            _value = value;
+            this.Value = value;
         }
 
         /// <summary>
@@ -22,7 +22,7 @@
         /// <returns>評価結果。</returns>
         public T Evaluate()
         {
-            return _value;
+            return this.Value;
         }
 
         /// <summary>
@@ -31,7 +31,7 @@
         /// <returns>定数の文字列表現。</returns>
         public override string ToString()
         {
-            return _value.ToString();
+            return this.Value.ToString();
         }
     }
 }

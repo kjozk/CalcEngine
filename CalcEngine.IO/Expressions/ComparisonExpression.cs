@@ -9,9 +9,20 @@ namespace CalcEngine.IO.Expressions
     public class ComparisonExpression<TSource> : IExpression<bool>
         where TSource : struct, IComparable, IConvertible
     {
-        private readonly IExpression<TSource> _left;
-        private readonly IExpression<TSource> _right;
-        private readonly BinaryOperator<TSource, bool> _operator;
+        /// <summary>
+        /// 左辺の式。
+        /// </summary>
+        public IExpression<TSource> Left { get; }
+
+        /// <summary>
+        /// 右辺の式。
+        /// </summary>
+        public IExpression<TSource> Right { get; }
+
+        /// <summary>
+        /// 二項演算子。
+        /// </summary>
+        public BinaryOperator<TSource, bool> Operator { get; }
 
         /// <summary>
         /// ComparisonExpression クラスのインスタンスを初期化します。
@@ -21,9 +32,9 @@ namespace CalcEngine.IO.Expressions
         /// <param name="operation">演算を行う関数。</param>
         public ComparisonExpression(IExpression<TSource> left, IExpression<TSource> right, BinaryOperator<TSource, bool> operation)
         {
-            _left = left;
-            _right = right;
-            _operator = operation;
+            this.Left = left;
+            this.Right = right;
+            this.Operator = operation;
         }
 
         /// <summary>
@@ -32,9 +43,9 @@ namespace CalcEngine.IO.Expressions
         /// <returns>評価結果。</returns>
         public bool Evaluate()
         {
-            var leftValue = _left.Evaluate();
-            var rightValue = _right.Evaluate();
-            return _operator.Operation(leftValue, rightValue);
+            var leftValue = this.Left.Evaluate();
+            var rightValue = this.Right.Evaluate();
+            return this.Operator.Operation(leftValue, rightValue);
         }
 
         /// <summary>
@@ -43,7 +54,7 @@ namespace CalcEngine.IO.Expressions
         /// <returns>比較演算式の文字列表現。</returns>
         public override string ToString()
         {
-            return $"({_left} {_operator.Symbol} {_right})";
+            return $"({this.Left} {this.Operator.Symbol} {this.Right})";
         }
     }
 }

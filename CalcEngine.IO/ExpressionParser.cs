@@ -25,7 +25,12 @@ namespace CalcEngine.IO
             new("==", 0, (a, b) => a == b)
         ];
 
-        private static readonly UnaryOperator<double, double> NegationOperator = new UnaryOperator<double, double>("-", 4, a => -a);
+        private static readonly List<UnaryOperator<double, double>> UnaryOperators =
+        [
+            new("+", 4, a => +a),
+            new("-", 4, a => -a),
+        ];
+
         private static readonly ParenthesisOperator LeftParenthesis = new ParenthesisOperator("(", 3);
         private static readonly ParenthesisOperator RightParenthesis = new ParenthesisOperator(")", 3);
 
@@ -48,6 +53,7 @@ namespace CalcEngine.IO
             var tokens = Tokenize(expression);
             var operandStack = new Stack<IExpression<double>>();
             var operatorStack = new Stack<IOperator>();
+            var parenthesisStack = new Stack<ParenthesisOperator>(); // 括弧を追跡するスタック
 
             foreach (var token in tokens)
             {
@@ -58,6 +64,7 @@ namespace CalcEngine.IO
                 else if (token == LeftParenthesis.Symbol)
                 {
                     operatorStack.Push(LeftParenthesis);
+                    parenthesisStack.Push(LeftParenthesis); // 左括弧をスタックに追加
                 }
                 else if (token == RightParenthesis.Symbol)
                 {
@@ -67,22 +74,37 @@ namespace CalcEngine.IO
                     }
                     if (operatorStack.Count == 0 || operatorStack.Pop() != LeftParenthesis)
                     {
-                        throw new SyntaxErrorException("数式の構文が無効です。");
+                        throw new SyntaxErrorException("対応する左括弧がありません。");
                     }
-                    var innerExpression = operandStack.Pop();
-                    operandStack.Push(new ParenthesisExpression<double>(innerExpression));
+                    parenthesisStack.Pop(); // 対応する左括弧をスタックから削除
                 }
                 else if (ArithmeticOperators.Any(op => op.Symbol == token))
                 {
-                    while (operatorStack.Count > 0 && HasHigherPrecedence(operatorStack.Peek(), token))
+                    // 単項演算子として処理するかどうかを判断
+                    bool isUnaryOperator = false;
+                    var unaryOperator = UnaryOperators.FirstOrDefault(ope => ope.Symbol == token);
+                    if (unaryOperator != null)
                     {
-                        ApplyOperator(operandStack, operatorStack.Pop());
+                        // オペランドがまだ一つもない、もしくは1つしかない場合は単項演算子として処理
+                        if (operandStack.Count == 0)
+                        {
+                            operatorStack.Push(unaryOperator); // 単項演算子としてプッシュ
+                            isUnaryOperator = true;
+                        }
+
+                        // TODO: 直前のトークンが演算子の場合も単項演算子として処理
+
                     }
-                    operatorStack.Push(ArithmeticOperators.First(op => op.Symbol == token));
-                }
-                else if (token == NegationOperator.Symbol)
-                {
-                    operatorStack.Push(NegationOperator);
+
+                    // 他の演算子は通常通り処理
+                    if (!isUnaryOperator)
+                    {
+                        while (operatorStack.Count > 0 && HasHigherPrecedence(operatorStack.Peek(), token))
+                        {
+                            ApplyOperator(operandStack, operatorStack.Pop());
+                        }
+                        operatorStack.Push(ArithmeticOperators.First(op => op.Symbol == token));
+                    }
                 }
                 else
                 {
@@ -93,6 +115,12 @@ namespace CalcEngine.IO
             while (operatorStack.Count > 0)
             {
                 ApplyOperator(operandStack, operatorStack.Pop());
+            }
+
+            // 解析後に括弧が残っていれば対応が取れていない
+            if (parenthesisStack.Count > 0)
+            {
+                throw new SyntaxErrorException("対応する右括弧がありません。");
             }
 
             if (operandStack.Count != 1)
@@ -126,7 +154,7 @@ namespace CalcEngine.IO
 
                     if (ch == '-' && lastCharWasOperator)
                     {
-                        number.Append(ch);
+                        tokens.Add(ch.ToString()); // Handle unary minus
                     }
                     else
                     {
@@ -150,7 +178,7 @@ namespace CalcEngine.IO
             {
                 if (operandStack.Count < 1)
                 {
-                    throw new SyntaxErrorException("数式の構文が無効です。");
+                    throw new SyntaxErrorException("Invalid expression.");
                 }
 
                 var operand = operandStack.Pop();
@@ -162,7 +190,7 @@ namespace CalcEngine.IO
             {
                 if (operandStack.Count < 2)
                 {
-                    throw new SyntaxErrorException("数式の構文が無効です。");
+                    throw new SyntaxErrorException("Invalid expression.");
                 }
 
                 var right = operandStack.Pop();
@@ -171,11 +199,32 @@ namespace CalcEngine.IO
                 return;
             }
 
-            throw new SyntaxErrorException($"無効な演算子: {operatorSymbol}");
+            if (operatorSymbol is ParenthesisOperator parenthesisOperator)
+            {
+                if (operandStack.Count < 1)
+                {
+                    throw new SyntaxErrorException("Invalid expression.");
+                }
+
+                var innerExpression = operandStack.Pop();
+                operandStack.Push(new ParenthesisExpression<double>(innerExpression));
+                return;
+            }
+
+            throw new SyntaxErrorException($"Invalid operator: {operatorSymbol}");
         }
 
         private static bool HasHigherPrecedence(IOperator operator1, string operator2)
         {
+            // 括弧は優先順位の比較を行わない
+            if (operator1 == LeftParenthesis || operator2 == LeftParenthesis.Symbol)
+            {
+                return false;
+            }
+            if (operator1 == RightParenthesis || operator2 == RightParenthesis.Symbol)
+            {
+                return true; // 括弧が閉じられる場合は必ず優先
+            }
             int precedence1 = GetPrecedence(operator1.Symbol);
             int precedence2 = GetPrecedence(operator2);
             return precedence1 >= precedence2;
@@ -186,19 +235,17 @@ namespace CalcEngine.IO
             var arithmeticOperator = ArithmeticOperators.FirstOrDefault(op => op.Symbol == operatorSymbol);
             if (arithmeticOperator != null) return arithmeticOperator.Precedence;
 
-            var comparisonOperator = ComparisonOperators.FirstOrDefault(op => op.Symbol == operatorSymbol);
-            if (comparisonOperator != null) return comparisonOperator.Precedence;
-
-            if (LeftParenthesis.Symbol == operatorSymbol)
+            if (operatorSymbol == LeftParenthesis.Symbol || operatorSymbol == RightParenthesis.Symbol)
             {
-                return LeftParenthesis.Precedence;
-            }
-            if (RightParenthesis.Symbol == operatorSymbol)
-            {
-                return LeftParenthesis.Precedence;
+                return 3;
             }
 
-            throw new SyntaxErrorException($"無効な演算子: {operatorSymbol}");
+            throw new SyntaxErrorException($"Invalid operator: {operatorSymbol}");
+        }
+
+        private static bool IsOperator(IOperator op)
+        {
+            return op is BinaryOperator<double, double> || op is UnaryOperator<double, double>;
         }
     }
 }

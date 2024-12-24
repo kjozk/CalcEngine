@@ -1,6 +1,7 @@
 ﻿namespace CalcEngine.IO.Expressions
 {
-    public class ParenthesisExpression<T> : IExpression<T> where T : struct, IComparable<T>
+    public class ParenthesisExpression<T> : IExpression<T> 
+        where T : struct, IComparable<T>
     {
         private readonly IExpression<T> _innerExpression;
 

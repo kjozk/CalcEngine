@@ -2,13 +2,27 @@
 
 namespace CalcEngine.IO.Expressions
 {
-    // 四則演算クラス
-    public class ArithmeticExpression<T> : IExpression<T> 
+    /// <summary>
+    /// 四則演算クラス
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    public class ArithmeticExpression<T> : IExpression<T>
         where T : struct, IComparable, IConvertible
     {
-        private readonly IExpression<T> _left;
-        private readonly IExpression<T> _right;
-        private readonly BinaryOperator<T, T> _operator;
+        /// <summary>
+        /// 左辺の式。
+        /// </summary>
+        public IExpression<T> Left { get; }
+
+        /// <summary>
+        /// 右辺の式。
+        /// </summary>
+        public IExpression<T> Right { get; }
+
+        /// <summary>
+        /// 二項演算子。
+        /// </summary>
+        public BinaryOperator<T, T> Operator { get; }
 
         /// <summary>
         /// ArithmeticExpression クラスのインスタンスを初期化します。
@@ -18,9 +32,9 @@ namespace CalcEngine.IO.Expressions
         /// <param name="operator">演算子。</param>
         public ArithmeticExpression(IExpression<T> left, IExpression<T> right, BinaryOperator<T, T> @operator)
         {
-            _left = left;
-            _right = right;
-            _operator = @operator;
+            Left = left;
+            Right = right;
+            Operator = @operator;
         }
 
         /// <summary>
@@ -30,9 +44,9 @@ namespace CalcEngine.IO.Expressions
         /// <returns>評価結果。</returns>
         public T Evaluate()
         {
-            var leftValue = _left.Evaluate();
-            var rightValue = _right.Evaluate();
-            return _operator.Operation(leftValue, rightValue);
+            var leftValue = Left.Evaluate();
+            var rightValue = Right.Evaluate();
+            return Operator.Operation(leftValue, rightValue);
         }
 
         /// <summary>
@@ -41,7 +55,7 @@ namespace CalcEngine.IO.Expressions
         /// <returns>四則演算式の文字列表現。</returns>
         public override string ToString()
         {
-            return $"({_left} {_operator.Symbol} {_right})";
+            return $"({Left} {Operator.Symbol} {Right})";
         }
     }
 }
