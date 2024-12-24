@@ -1,7 +1,8 @@
 ﻿namespace CalcEngine.IO.Expressions
 {
     // 定数式の具象クラス
-    public class ConstantExpression<T> : IExpression<T, T> where T : struct, IConvertible
+    public class ConstantExpression<T> : IExpression<T>
+        where T : struct, IConvertible
     {
         private readonly T _value;
 

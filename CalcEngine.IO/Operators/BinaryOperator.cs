@@ -1,13 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace CalcEngine.IO
+﻿namespace CalcEngine.IO.Operators
 {
-    // 二項演算子クラス
+    /// <summary>
+    /// 二項演算子クラス
+    /// </summary>
+    /// <typeparam name="TSource"></typeparam>
+    /// <typeparam name="TResult"></typeparam>
     public class BinaryOperator<TSource, TResult> : IOperator
+        where TSource : struct, IComparable, IConvertible
+        where TResult : struct, IComparable, IConvertible
     {
         public int Precedence { get; }
         public string Symbol { get; }

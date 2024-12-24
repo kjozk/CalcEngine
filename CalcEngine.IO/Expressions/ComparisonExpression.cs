@@ -1,10 +1,16 @@
-﻿namespace CalcEngine.IO.Expressions
+﻿using CalcEngine.IO.Operators;
+
+namespace CalcEngine.IO.Expressions
 {
-    // 比較演算クラス
-    public class ComparisonExpression<TSource> : IExpression<TSource, bool>
+    /// <summary>
+    /// 比較演算クラス
+    /// </summary>
+    /// <typeparam name="TSource"></typeparam>
+    public class ComparisonExpression<TSource> : IExpression<bool>
+        where TSource : struct, IComparable, IConvertible
     {
-        private readonly IExpression<TSource, TSource> _left;
-        private readonly IExpression<TSource, TSource> _right;
+        private readonly IExpression<TSource> _left;
+        private readonly IExpression<TSource> _right;
         private readonly BinaryOperator<TSource, bool> _operator;
 
         /// <summary>
@@ -13,7 +19,7 @@
         /// <param name="left">左辺の式。</param>
         /// <param name="right">右辺の式。</param>
         /// <param name="operation">演算を行う関数。</param>
-        public ComparisonExpression(IExpression<TSource, TSource> left, IExpression<TSource, TSource> right, BinaryOperator<TSource, bool> operation)
+        public ComparisonExpression(IExpression<TSource> left, IExpression<TSource> right, BinaryOperator<TSource, bool> operation)
         {
             _left = left;
             _right = right;

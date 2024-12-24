@@ -9,7 +9,7 @@ namespace CalcEngine.Test
         [TestMethod]
         public void AdditionTest()
         {
-            IExpression<double, double> expression;
+            IExpression<double> expression;
 
             // 3 + 4 = 7
             expression = ExpressionParser.ParseArithmeticExpression("3 + 4");
@@ -40,7 +40,7 @@ namespace CalcEngine.Test
         [TestMethod]
         public void SubtractionTest()
         {
-            IExpression<double, double> expression;
+            IExpression<double> expression;
 
             // 5 - 3 = 2
             expression = ExpressionParser.ParseArithmeticExpression("5 - 3");
@@ -71,7 +71,7 @@ namespace CalcEngine.Test
         [TestMethod]
         public void MultiplicationTest()
         {
-            IExpression<double, double> expression;
+            IExpression<double> expression;
 
             // 3 * 4 = 12
             expression = ExpressionParser.ParseArithmeticExpression("3 * 4");
@@ -102,7 +102,7 @@ namespace CalcEngine.Test
         [TestMethod]
         public void DivisionTest()
         {
-            IExpression<double, double> expression;
+            IExpression<double> expression;
 
             // 8 / 2 = 4
             expression = ExpressionParser.ParseArithmeticExpression("8 / 2");
@@ -133,7 +133,7 @@ namespace CalcEngine.Test
         [TestMethod]
         public void MixedOperationsTest()
         {
-            IExpression<double, double> expression;
+            IExpression<double> expression;
 
             // 3 + 5 * 2 = 13
             expression = ExpressionParser.ParseArithmeticExpression("3 + 5 * 2");
@@ -172,7 +172,7 @@ namespace CalcEngine.Test
         [TestMethod]
         public void NegativeNumberTest()
         {
-            IExpression<double, double> expression;
+            IExpression<double> expression;
 
             // -10 = -10
             expression = ExpressionParser.ParseArithmeticExpression("-10");
@@ -197,6 +197,26 @@ namespace CalcEngine.Test
             // -123456789 - 987654321 = -1111111110
             expression = ExpressionParser.ParseArithmeticExpression("-123456789 - 987654321");
             Assert.AreEqual(-1111111110, expression.Evaluate());
+        }
+
+        // 異常系のテストケース
+        [TestMethod]
+        public void InvalidExpressionTest()
+        {
+            // 無効なトークン
+            Assert.IsFalse(ExpressionParser.TryParseArithmeticExpression("3 + @", out var _));
+
+            // 括弧の不一致
+            Assert.IsFalse(ExpressionParser.TryParseArithmeticExpression("(3 + 4", out var _));
+
+            // 演算子の連続
+            Assert.IsFalse(ExpressionParser.TryParseArithmeticExpression("3 ++ 4", out var _));
+
+            // オペランド不足
+            Assert.IsFalse(ExpressionParser.TryParseArithmeticExpression("3 + ", out var _));
+
+            // 無効な演算子
+            Assert.IsFalse(ExpressionParser.TryParseArithmeticExpression("3 $ 4", out var _));
         }
     }
 }

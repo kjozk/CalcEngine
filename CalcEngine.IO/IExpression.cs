@@ -16,11 +16,6 @@ namespace CalcEngine.IO
         TResult Evaluate();
     }
 
-    // IExpression インターフェース
-    public interface IExpression<TSource, TResult> : IExpression<TResult>
-    {
-    }
-
     // IParameterizedExpression インターフェース
     public interface IParameterizedExpression<TSource, TResult>
     {

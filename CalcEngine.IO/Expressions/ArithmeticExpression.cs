@@ -1,10 +1,13 @@
-﻿namespace CalcEngine.IO.Expressions
+﻿using CalcEngine.IO.Operators;
+
+namespace CalcEngine.IO.Expressions
 {
     // 四則演算クラス
-    public class ArithmeticExpression<T> : IExpression<T, T> where T : struct, IConvertible
+    public class ArithmeticExpression<T> : IExpression<T> 
+        where T : struct, IComparable, IConvertible
     {
-        private readonly IExpression<T, T> _left;
-        private readonly IExpression<T, T> _right;
+        private readonly IExpression<T> _left;
+        private readonly IExpression<T> _right;
         private readonly BinaryOperator<T, T> _operator;
 
         /// <summary>
@@ -13,7 +16,7 @@
         /// <param name="left">左辺の式。</param>
         /// <param name="right">右辺の式。</param>
         /// <param name="operator">演算子。</param>
-        public ArithmeticExpression(IExpression<T, T> left, IExpression<T, T> right, BinaryOperator<T, T> @operator)
+        public ArithmeticExpression(IExpression<T> left, IExpression<T> right, BinaryOperator<T, T> @operator)
         {
             _left = left;
             _right = right;
