@@ -7,8 +7,7 @@ namespace CalcEngine.IO
     public static class ExpressionParser<TResult>
             where TResult : struct, IConvertible, IComparable, IEquatable<TResult>
     {
-        private static readonly List<BinaryOperator<TResult, TResult>> ArithmeticOperators =
-        new List<BinaryOperator<TResult, TResult>>
+        private static readonly List<BinaryOperator<TResult, TResult>> ArithmeticOperators = new List<BinaryOperator<TResult, TResult>>
         {
                 new BinaryOperator<TResult, TResult>("+", 1, (a, b) => (dynamic)a + (dynamic)b),
                 new BinaryOperator<TResult, TResult>("-", 1, (a, b) => (dynamic)a - (dynamic)b),
@@ -18,8 +17,7 @@ namespace CalcEngine.IO
                 new BinaryOperator<TResult, TResult>("÷", 2, (a, b) => (dynamic)a / (dynamic)b)
         };
 
-        private static readonly List<BinaryOperator<TResult, bool>> ComparisonOperators =
-        new List<BinaryOperator<TResult, bool>>
+        private static readonly List<BinaryOperator<TResult, bool>> ComparisonOperators = new List<BinaryOperator<TResult, bool>>
         {
                 new BinaryOperator<TResult, bool>(">", 0, (a, b) => (dynamic)a > (dynamic)b),
                 new BinaryOperator<TResult, bool>("<", 0, (a, b) => (dynamic)a < (dynamic)b),
@@ -28,8 +26,7 @@ namespace CalcEngine.IO
                 new BinaryOperator<TResult, bool>("==", 0, (a, b) => (dynamic)a == (dynamic)b)
         };
 
-        private static readonly List<UnaryOperator<TResult, TResult>> UnaryOperators =
-        new List<UnaryOperator<TResult, TResult>>
+        private static readonly List<UnaryOperator<TResult, TResult>> UnaryOperators = new List<UnaryOperator<TResult, TResult>>
         {
                 new UnaryOperator<TResult, TResult>("+", 4, a => +(dynamic)a),
                 new UnaryOperator<TResult, TResult>("-", 4, a => -(dynamic)a),
@@ -82,33 +79,17 @@ namespace CalcEngine.IO
                     }
                     parenthesisStack.Pop(); // 対応する左括弧をスタックから削除
                 }
+                else if (operandStack.Count == 0 && UnaryOperators.Any(op => op.Symbol == token))
+                {
+                    operatorStack.Push(UnaryOperators.First(op => op.Symbol == token));
+                }
                 else if (ArithmeticOperators.Any(op => op.Symbol == token))
                 {
-                    // 単項演算子として処理するかどうかを判断
-                    bool isUnaryOperator = false;
-                    var unaryOperator = UnaryOperators.FirstOrDefault(ope => ope.Symbol == token);
-                    if (unaryOperator != null)
+                    while (operatorStack.Count > 0 && HasHigherPrecedence(operatorStack.Peek(), token))
                     {
-                        // オペランドがまだ一つもない、もしくは1つしかない場合は単項演算子として処理
-                        if (operandStack.Count == 0)
-                        {
-                            operatorStack.Push(unaryOperator); // 単項演算子としてプッシュ
-                            isUnaryOperator = true;
-                        }
- 
-                        // TODO: 直前のトークンが演算子の場合も単項演算子として処理
-
-                   }
-
-                    // 他の演算子は通常通り処理
-                    if (!isUnaryOperator)
-                    {
-                        while (operatorStack.Count > 0 && HasHigherPrecedence(operatorStack.Peek(), token))
-                        {
-                            ApplyOperator(operandStack, operatorStack.Pop());
-                        }
-                        operatorStack.Push(ArithmeticOperators.First(op => op.Symbol == token));
+                        ApplyOperator(operandStack, operatorStack.Pop());
                     }
+                    operatorStack.Push(ArithmeticOperators.First(op => op.Symbol == token));
                 }
                 else
                 {
@@ -129,7 +110,7 @@ namespace CalcEngine.IO
 
             if (operandStack.Count != 1)
             {
-                throw new SyntaxErrorException("数式の構文が無効です。");
+                throw new SyntaxErrorException($"数式の構文が無効です。数式のルートが複数あります。{string.Join(",", operandStack)}");
             }
 
             return operandStack.Pop();
@@ -156,9 +137,9 @@ namespace CalcEngine.IO
                         number.Clear();
                     }
 
-                    if (ch == '-' && lastCharWasOperator)
+                    if (UnaryOperators.Any(ope => ope.Symbol == ch.ToString()) && lastCharWasOperator)  // TODO: 単項演算子は1文字である必要あり
                     {
-                        tokens.Add(ch.ToString()); // 単項マイナスを処理
+                        number.Append(ch); // 単項演算子を数字と一緒に処理
                     }
                     else
                     {

@@ -210,13 +210,44 @@ namespace CalcEngine.Test
             Assert.IsFalse(ExpressionParser<double>.TryParseArithmeticExpression("(3 + 4", out var _));
 
             // 演算子の連続
-            Assert.IsFalse(ExpressionParser<double>.TryParseArithmeticExpression("3 ++ 4", out var _));
+            Assert.IsFalse(ExpressionParser<double>.TryParseArithmeticExpression("3 +/ 4", out var _));
 
             // オペランド不足
             Assert.IsFalse(ExpressionParser<double>.TryParseArithmeticExpression("3 + ", out var _));
 
             // 無効な演算子
             Assert.IsFalse(ExpressionParser<double>.TryParseArithmeticExpression("3 $ 4", out var _));
+        }
+
+        // 複雑な数式のテストケース
+        [TestMethod]
+        public void ComplexExpressionTest()
+        {
+            IExpression<int> expression;
+
+            // (3 + 4) * 2 = 14
+            expression = ExpressionParser<int>.ParseArithmeticExpression("(3 + 4) * 2");
+            Assert.AreEqual(14, expression.Evaluate());
+
+            // 3 + 4 * 2 = 11
+            expression = ExpressionParser<int>.ParseArithmeticExpression("3 + 4 * 2");
+            Assert.AreEqual(11, expression.Evaluate());
+
+            // (1 + 2) * (3 - 4) / 2 = -1
+            expression = ExpressionParser<int>.ParseArithmeticExpression("(1 + 2) * (3 - 4) / 2");
+            Assert.AreEqual(-1, expression.Evaluate());
+
+            // 10 / (2 + 3) = 2
+            expression = ExpressionParser<int>.ParseArithmeticExpression("10 / (2 + 3)");
+            Assert.AreEqual(2, expression.Evaluate());
+
+            // (2 + 3) * (4 - 1) = 15
+            expression = ExpressionParser<int>.ParseArithmeticExpression("(2 + 3) * (4 - 1)");
+            Assert.AreEqual(15, expression.Evaluate());
+
+            // 5 * (6 + 2) - 3 = 37
+            expression = ExpressionParser<int>.ParseArithmeticExpression("5 * (6 + 2) - 3");
+            Assert.AreEqual(37, expression.Evaluate());
         }
     }
 }
