@@ -4,37 +4,41 @@ using CalcEngine.IO.Operators;
 
 namespace CalcEngine.IO
 {
-    public static class ExpressionParser
+    public static class ExpressionParser<TResult>
+            where TResult : struct, IConvertible, IComparable, IEquatable<TResult>
     {
-        private static readonly List<BinaryOperator<double, double>> ArithmeticOperators =
-        [
-            new("+", 1, (a, b) => a + b),
-            new("-", 1, (a, b) => a - b),
-            new("*", 2, (a, b) => a * b),
-            new("×", 2, (a, b) => a * b),
-            new("/", 2, (a, b) => a / b),
-            new("÷", 2, (a, b) => a / b)
-        ];
+        private static readonly List<BinaryOperator<TResult, TResult>> ArithmeticOperators =
+        new List<BinaryOperator<TResult, TResult>>
+        {
+                new BinaryOperator<TResult, TResult>("+", 1, (a, b) => (dynamic)a + (dynamic)b),
+                new BinaryOperator<TResult, TResult>("-", 1, (a, b) => (dynamic)a - (dynamic)b),
+                new BinaryOperator<TResult, TResult>("*", 2, (a, b) => (dynamic)a * (dynamic)b),
+                new BinaryOperator<TResult, TResult>("×", 2, (a, b) => (dynamic)a * (dynamic)b),
+                new BinaryOperator<TResult, TResult>("/", 2, (a, b) => (dynamic)a / (dynamic)b),
+                new BinaryOperator<TResult, TResult>("÷", 2, (a, b) => (dynamic)a / (dynamic)b)
+        };
 
-        private static readonly List<BinaryOperator<double, bool>> ComparisonOperators =
-        [
-            new(">", 0, (a, b) => a > b),
-            new("<", 0, (a, b) => a < b),
-            new(">=", 0, (a, b) => a >= b),
-            new("<=", 0, (a, b) => a <= b),
-            new("==", 0, (a, b) => a == b)
-        ];
+        private static readonly List<BinaryOperator<TResult, bool>> ComparisonOperators =
+        new List<BinaryOperator<TResult, bool>>
+        {
+                new BinaryOperator<TResult, bool>(">", 0, (a, b) => (dynamic)a > (dynamic)b),
+                new BinaryOperator<TResult, bool>("<", 0, (a, b) => (dynamic)a < (dynamic)b),
+                new BinaryOperator<TResult, bool>(">=", 0, (a, b) => (dynamic)a >= (dynamic)b),
+                new BinaryOperator<TResult, bool>("<=", 0, (a, b) => (dynamic)a <= (dynamic)b),
+                new BinaryOperator<TResult, bool>("==", 0, (a, b) => (dynamic)a == (dynamic)b)
+        };
 
-        private static readonly List<UnaryOperator<double, double>> UnaryOperators =
-        [
-            new("+", 4, a => +a),
-            new("-", 4, a => -a),
-        ];
+        private static readonly List<UnaryOperator<TResult, TResult>> UnaryOperators =
+        new List<UnaryOperator<TResult, TResult>>
+        {
+                new UnaryOperator<TResult, TResult>("+", 4, a => +(dynamic)a),
+                new UnaryOperator<TResult, TResult>("-", 4, a => -(dynamic)a),
+        };
 
         private static readonly ParenthesisOperator LeftParenthesis = new ParenthesisOperator("(", 3);
         private static readonly ParenthesisOperator RightParenthesis = new ParenthesisOperator(")", 3);
 
-        public static bool TryParseArithmeticExpression(string expression, out IExpression<double>? result)
+        public static bool TryParseArithmeticExpression(string expression, out IExpression<TResult>? result)
         {
             try
             {
@@ -48,18 +52,18 @@ namespace CalcEngine.IO
             }
         }
 
-        public static IExpression<double> ParseArithmeticExpression(string expression)
+        public static IExpression<TResult> ParseArithmeticExpression(string expression)
         {
             var tokens = Tokenize(expression);
-            var operandStack = new Stack<IExpression<double>>();
+            var operandStack = new Stack<IExpression<TResult>>();
             var operatorStack = new Stack<IOperator>();
             var parenthesisStack = new Stack<ParenthesisOperator>(); // 括弧を追跡するスタック
 
             foreach (var token in tokens)
             {
-                if (double.TryParse(token, out double number))
+                if (TryParseToken(token, out TResult number))
                 {
-                    operandStack.Push(new ConstantExpression<double>(number));
+                    operandStack.Push(new ConstantExpression<TResult>(number));
                 }
                 else if (token == LeftParenthesis.Symbol)
                 {
@@ -91,10 +95,10 @@ namespace CalcEngine.IO
                             operatorStack.Push(unaryOperator); // 単項演算子としてプッシュ
                             isUnaryOperator = true;
                         }
-
+ 
                         // TODO: 直前のトークンが演算子の場合も単項演算子として処理
 
-                    }
+                   }
 
                     // 他の演算子は通常通り処理
                     if (!isUnaryOperator)
@@ -154,7 +158,7 @@ namespace CalcEngine.IO
 
                     if (ch == '-' && lastCharWasOperator)
                     {
-                        tokens.Add(ch.ToString()); // Handle unary minus
+                        tokens.Add(ch.ToString()); // 単項マイナスを処理
                     }
                     else
                     {
@@ -172,30 +176,44 @@ namespace CalcEngine.IO
             return tokens;
         }
 
-        private static void ApplyOperator(Stack<IExpression<double>> operandStack, IOperator operatorSymbol)
+        private static bool TryParseToken(string token, out TResult result)
         {
-            if (operatorSymbol is UnaryOperator<double, double> unaryOperator)
+            try
+            {
+                result = (TResult)Convert.ChangeType(token, typeof(TResult));
+                return true;
+            }
+            catch
+            {
+                result = default;
+                return false;
+            }
+        }
+
+        private static void ApplyOperator(Stack<IExpression<TResult>> operandStack, IOperator operatorSymbol)
+        {
+            if (operatorSymbol is UnaryOperator<TResult, TResult> unaryOperator)
             {
                 if (operandStack.Count < 1)
                 {
-                    throw new SyntaxErrorException("Invalid expression.");
+                    throw new SyntaxErrorException("数式の構文が無効です。");
                 }
 
                 var operand = operandStack.Pop();
-                operandStack.Push(new UnaryExpression<double>(operand, unaryOperator));
+                operandStack.Push(new UnaryExpression<TResult>(operand, unaryOperator));
                 return;
             }
 
-            if (operatorSymbol is BinaryOperator<double, double> binaryOperator)
+            if (operatorSymbol is BinaryOperator<TResult, TResult> binaryOperator)
             {
                 if (operandStack.Count < 2)
                 {
-                    throw new SyntaxErrorException("Invalid expression.");
+                    throw new SyntaxErrorException("数式の構文が無効です。");
                 }
 
                 var right = operandStack.Pop();
                 var left = operandStack.Pop();
-                operandStack.Push(new ArithmeticExpression<double>(left, right, binaryOperator));
+                operandStack.Push(new ArithmeticExpression<TResult>(left, right, binaryOperator));
                 return;
             }
 
@@ -203,15 +221,15 @@ namespace CalcEngine.IO
             {
                 if (operandStack.Count < 1)
                 {
-                    throw new SyntaxErrorException("Invalid expression.");
+                    throw new SyntaxErrorException("数式の構文が無効です。");
                 }
 
                 var innerExpression = operandStack.Pop();
-                operandStack.Push(new ParenthesisExpression<double>(innerExpression));
+                operandStack.Push(new ParenthesisExpression<TResult>(innerExpression));
                 return;
             }
 
-            throw new SyntaxErrorException($"Invalid operator: {operatorSymbol}");
+            throw new SyntaxErrorException($"無効な演算子: {operatorSymbol}");
         }
 
         private static bool HasHigherPrecedence(IOperator operator1, string operator2)
@@ -240,12 +258,12 @@ namespace CalcEngine.IO
                 return 3;
             }
 
-            throw new SyntaxErrorException($"Invalid operator: {operatorSymbol}");
+            throw new SyntaxErrorException($"無効な演算子: {operatorSymbol}");
         }
 
         private static bool IsOperator(IOperator op)
         {
-            return op is BinaryOperator<double, double> || op is UnaryOperator<double, double>;
+            return op is BinaryOperator<TResult, TResult> || op is UnaryOperator<TResult, TResult>;
         }
     }
 }
