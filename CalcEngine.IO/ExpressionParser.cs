@@ -18,12 +18,12 @@ namespace CalcEngine.IO
         /// </summary>
         private static readonly List<BinaryOperator<TResult, TResult>> ArithmeticOperators = new List<BinaryOperator<TResult, TResult>>
         {
-                new BinaryOperator<TResult, TResult>("+", 1, (a, b) => (dynamic)a + (dynamic)b),
-                new BinaryOperator<TResult, TResult>("-", 1, (a, b) => (dynamic)a - (dynamic)b),
-                new BinaryOperator<TResult, TResult>("*", 2, (a, b) => (dynamic)a * (dynamic)b),
-                new BinaryOperator<TResult, TResult>("×", 2, (a, b) => (dynamic)a * (dynamic)b),
-                new BinaryOperator<TResult, TResult>("/", 2, (a, b) => (dynamic)a / (dynamic)b),
-                new BinaryOperator<TResult, TResult>("÷", 2, (a, b) => (dynamic)a / (dynamic)b)
+            new BinaryOperator<TResult, TResult>("+", 1, (a, b) => (dynamic)a + (dynamic)b),
+            new BinaryOperator<TResult, TResult>("-", 1, (a, b) => (dynamic)a - (dynamic)b),
+            new BinaryOperator<TResult, TResult>("*", 2, (a, b) => (dynamic)a * (dynamic)b),
+            new BinaryOperator<TResult, TResult>("×", 2, (a, b) => (dynamic)a * (dynamic)b),
+            new BinaryOperator<TResult, TResult>("/", 2, (a, b) => (dynamic)a / (dynamic)b),
+            new BinaryOperator<TResult, TResult>("÷", 2, (a, b) => (dynamic)a / (dynamic)b)
         };
 
         /// <summary>
@@ -31,11 +31,14 @@ namespace CalcEngine.IO
         /// </summary>
         private static readonly List<BinaryOperator<TResult, bool>> ComparisonOperators = new List<BinaryOperator<TResult, bool>>
         {
-                new BinaryOperator<TResult, bool>(">", 0, (a, b) => (dynamic)a > (dynamic)b),
-                new BinaryOperator<TResult, bool>("<", 0, (a, b) => (dynamic)a < (dynamic)b),
-                new BinaryOperator<TResult, bool>(">=", 0, (a, b) => (dynamic)a >= (dynamic)b),
-                new BinaryOperator<TResult, bool>("<=", 0, (a, b) => (dynamic)a <= (dynamic)b),
-                new BinaryOperator<TResult, bool>("==", 0, (a, b) => (dynamic)a == (dynamic)b)
+            new BinaryOperator<TResult, bool>("≧", 0, (a, b) => (dynamic)a >= (dynamic)b),
+            new BinaryOperator<TResult, bool>("≦", 0, (a, b) => (dynamic)a <= (dynamic)b),
+            new BinaryOperator<TResult, bool>(">=", 0, (a, b) => (dynamic)a >= (dynamic)b),
+            new BinaryOperator<TResult, bool>("<=", 0, (a, b) => (dynamic)a <= (dynamic)b),
+            new BinaryOperator<TResult, bool>("==", 0, (a, b) => (dynamic)a == (dynamic)b),
+            // > よりも >= が先に評価されるように並べる
+            new BinaryOperator<TResult, bool>(">", 0, (a, b) => (dynamic)a > (dynamic)b),
+            new BinaryOperator<TResult, bool>("<", 0, (a, b) => (dynamic)a < (dynamic)b),
         };
 
         /// <summary>
@@ -43,8 +46,8 @@ namespace CalcEngine.IO
         /// </summary>
         private static readonly List<UnaryOperator<TResult, TResult>> UnaryOperators = new List<UnaryOperator<TResult, TResult>>
         {
-                new UnaryOperator<TResult, TResult>("+", 4, a => +(dynamic)a),
-                new UnaryOperator<TResult, TResult>("-", 4, a => -(dynamic)a),
+            new UnaryOperator<TResult, TResult>("+", 4, a => +(dynamic)a),
+            new UnaryOperator<TResult, TResult>("-", 4, a => -(dynamic)a),
         };
 
         // 括弧演算子
@@ -191,6 +194,63 @@ namespace CalcEngine.IO
         }
 
         /// <summary>
+        /// 比較演算式を解析するメソッド
+        /// </summary>
+        /// <param name="expression">式文字列</param>
+        /// <returns>解析結果の式木</returns>
+        /// <exception cref="SyntaxErrorException"></exception>
+        public static IExpression<bool> ParseComparison(string expression)
+        {
+            Debug.WriteLine($"ParseComparison: 開始 \"{expression}\"");
+            var operandStack = new Stack<IExpression<TResult>>();
+            var operatorStack = new Stack<IOperator>();
+
+            // 式をトークンに分割
+            var tokens = Tokenize(expression);
+            Debug.WriteLine($"ParseComparison: トークン = [{string.Join(", ", tokens.Select(t => "\"" + t + "\""))}]");
+
+            try
+            {
+                var result = ParseComparison(tokens, 0);
+
+                Debug.WriteLine($"ParseComparison: 終了 \"{result} = {result.Evaluate()}\"");
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                throw new SyntaxErrorException($"数式 {expression} の構文が無効です。", ex);
+            }
+        }
+
+        private static IExpression<bool> ParseComparison(List<string> tokens, int nest)
+        {
+            var operandStack = new Stack<IExpression<TResult>>();
+            var operatorStack = new Stack<IOperator>();
+
+            // 比較演算子のインデックスを探す
+            int comparisonOperatorIndex = tokens.FindIndex(token => ComparisonOperators.Any(op => op.Symbol == token));
+
+            if (comparisonOperatorIndex == -1)
+            {
+                throw new SyntaxErrorException("比較演算子が見つかりません。");
+            }
+
+            // 比較演算子の前後でトークンを分割
+            var leftTokens = tokens.Take(comparisonOperatorIndex).ToList();
+            var rightTokens = tokens.Skip(comparisonOperatorIndex + 1).ToList();
+            var comparisonOperator = ComparisonOperators.First(op => op.Symbol == tokens[comparisonOperatorIndex]);
+
+            // 左側のトークンを解析
+            var leftExpression = Parse(leftTokens, nest + 1);
+
+            // 右側のトークンを解析
+            var rightExpression = Parse(rightTokens, nest + 1);
+
+            return new ComparisonExpression<TResult>(leftExpression, rightExpression, comparisonOperator);
+        }
+
+        /// <summary>
         /// 括弧内のトークンを切り出すメソッド
         /// </summary>
         /// <param name="tokens">基となるトークン</param>
@@ -237,11 +297,16 @@ namespace CalcEngine.IO
         private static List<string> Tokenize(string expression)
         {
             var tokens = new List<string>();
-            // 正規表現パターンを定義
-            // \d+(\.\d+)? : 整数または小数
-            // [+\-*/×÷()] : 演算子と括弧
-            // \s+ : 空白文字
-            var regex = new Regex(@"\d+(\.\d+)?|[+\-*/×÷()]|\s+");
+            // 演算子のシンボルを取得
+            var operatorSymbols = ArithmeticOperators.Select(op => Regex.Escape(op.Symbol))
+                                .Concat(ComparisonOperators.Select(op => Regex.Escape(op.Symbol)))
+                                .Concat(UnaryOperators.Select(op => Regex.Escape(op.Symbol)))
+                                .Concat(new[] { Regex.Escape(LeftParenthesis.Symbol), Regex.Escape(RightParenthesis.Symbol) });
+
+            // 正規表現パターンを生成
+            var pattern = $@"\d+(\.\d+)?|{string.Join("|", operatorSymbols)}|\s+";
+
+            var regex = new Regex(pattern);
 
             foreach (Match match in regex.Matches(expression))
             {
