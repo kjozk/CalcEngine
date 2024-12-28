@@ -8,7 +8,6 @@ CalcEngineは、数式文字列を解析して評価するためのライブラ�
 
 ```csharp
 using CalcEngine.IO;
-using CalcEngine.IO.Expressions;
 
 string expression = "3 + 5 * 2";
 IExpression<double> parsedExpression = ExpressionParser<double>.Parse(expression);
@@ -20,7 +19,6 @@ Console.WriteLine(result); // 出力: 13
 
 ```csharp
 using CalcEngine.IO;
-using CalcEngine.IO.Expressions;
 
 string expression = "5 > 3";
 IExpression<bool> parsedExpression = ExpressionParser<double>.ParseComparison(expression);
@@ -32,12 +30,11 @@ Console.WriteLine(result); // 出力: True
 
 ```csharp
 using CalcEngine.IO;
-using CalcEngine.IO.Expressions;
 
 string expression = "真 ⊕ 偽";
 IExpression<bool> parsedExpression = ExpressionParser<bool>.ParseLogical(expression);
 bool result = parsedExpression.Evaluate();
-Console.WriteLine(result); // 出力: False
+Console.WriteLine(result); // 出力: True
 ```
 
 ## 対応している演算子
