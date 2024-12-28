@@ -3,7 +3,8 @@
 namespace CalcEngine.IO.Expressions
 {
     // 単項演算式クラス
-    public class UnaryExpression<T> : IExpression<T> where T : struct, IConvertible
+    public class UnaryExpression<T> : IExpression<T>
+        where T : struct, IComparable, IConvertible
     {
         private readonly IExpression<T> _operand;
         private readonly UnaryOperator<T, T> _operator;

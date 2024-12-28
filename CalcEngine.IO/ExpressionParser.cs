@@ -34,15 +34,19 @@ namespace CalcEngine.IO
             {
                 new BinaryOperator<TOperand, bool>("≧", 0, (a, b) => (dynamic)a >= (dynamic)b),
                 new BinaryOperator<TOperand, bool>("≦", 0, (a, b) => (dynamic)a <= (dynamic)b),
+                new BinaryOperator<TOperand, bool>("≥", 0, (a, b) => (dynamic)a >= (dynamic)b),
+                new BinaryOperator<TOperand, bool>("≤", 0, (a, b) => (dynamic)a <= (dynamic)b),
                 new BinaryOperator<TOperand, bool>(">=", 0, (a, b) => (dynamic)a >= (dynamic)b),
                 new BinaryOperator<TOperand, bool>("<=", 0, (a, b) => (dynamic)a <= (dynamic)b),
                 new BinaryOperator<TOperand, bool>("==", 0, (a, b) => (dynamic)a == (dynamic)b),
                 new BinaryOperator<TOperand, bool>("!=", 0, (a, b) => (dynamic)a != (dynamic)b), // 不等号演算子
                 new BinaryOperator<TOperand, bool>("≠", 0, (a, b) => (dynamic)a != (dynamic)b), // 不等号演算子
+                new BinaryOperator<TOperand, bool>("≡", 0, (a, b) => (dynamic)a == (dynamic)b), // 同値演算子
                 // > よりも >= が先に評価されるように並べる
                 new BinaryOperator<TOperand, bool>(">", 0, (a, b) => (dynamic)a > (dynamic)b),
                 new BinaryOperator<TOperand, bool>("<", 0, (a, b) => (dynamic)a < (dynamic)b),
             };
+              
 
         /// <summary>
         /// 単項演算子のリスト
@@ -52,6 +56,75 @@ namespace CalcEngine.IO
                 new UnaryOperator<TOperand, TOperand>("+", 4, a => +(dynamic)a),
                 new UnaryOperator<TOperand, TOperand>("-", 4, a => -(dynamic)a),
             };
+
+        /// <summary>
+        /// 論理演算子のリスト
+        /// </summary>
+        private static readonly List<BinaryOperator<bool, bool>> LogicalOperators = new List<BinaryOperator<bool, bool>>
+            {
+                new BinaryOperator<bool, bool>("∧", 0, (a, b) => a && b), // 論理積
+                new BinaryOperator<bool, bool>("∨", 0, (a, b) => a || b), // 論理和
+                new BinaryOperator<bool, bool>("AND", 0, (a, b) => a && b), // 論理積
+                new BinaryOperator<bool, bool>("OR", 0, (a, b) => a || b), // 論理和
+                new BinaryOperator<bool, bool>("XOR", 0, (a, b) => a ^ b),  // 排他的論理和
+                new BinaryOperator<bool, bool>("&&", 0, (a, b) => a && b), // 論理積
+                new BinaryOperator<bool, bool>("||", 0, (a, b) => a || b), // 論理和
+                new BinaryOperator<bool, bool>("NOR", 0, (a, b) => !(a || b)), // 否定論理和
+                new BinaryOperator<bool, bool>("NAND", 0, (a, b) => !(a && b)), // 否定論理積
+                new BinaryOperator<bool, bool>("⊅", 0, (a, b) => a && !b), // 非含意
+                new BinaryOperator<bool, bool>("↛", 0, (a, b) => a && !b), // 非含意
+                new BinaryOperator<bool, bool>("⊃", 0, (a, b) => !a || b), // 含意
+                new BinaryOperator<bool, bool>("↑", 0, (a, b) => !(a && b)), // 否定論理積
+                new BinaryOperator<bool, bool>("⊄", 0, (a, b) => a && !b), // 逆非含意
+                new BinaryOperator<bool, bool>("↚", 0, (a, b) => a && !b), // 逆非含意
+                new BinaryOperator<bool, bool>("←", 0, (a, b) => b), // 含意
+                new BinaryOperator<bool, bool>("⊂", 0, (a, b) => !a && b), // 否定論理積
+                new BinaryOperator<bool, bool>("P↮", 0, (a, b) => a != b), // 不等
+                new BinaryOperator<bool, bool>("≢", 0, (a, b) => a != b), // 不等
+                new BinaryOperator<bool, bool>("⊕", 0, (a, b) => a ^ b),  // 排他的論理和
+                new BinaryOperator<bool, bool>("⊻", 0, (a, b) => a ^ b),  // 排他的論理和
+                new BinaryOperator<bool, bool>("↔", 0, (a, b) => a == b), // 同値
+                new BinaryOperator<bool, bool>("≡", 0, (a, b) => a == b), // 同値
+                new BinaryOperator<bool, bool>("XNOR", 0, (a, b) => a == b), // 否定排他的論理和
+                new BinaryOperator<bool, bool>("IFF", 0, (a, b) => a == b), // 同値
+                new BinaryOperator<bool, bool>("↓", 0, (a, b) => !(a || b)), // 否定論理和
+                new BinaryOperator<bool, bool>("IMPLIES", 0, (a, b) => !a || b), // 含意
+                new BinaryOperator<bool, bool>("EQUIV", 0, (a, b) => a == b), // 同値
+                new BinaryOperator<bool, bool>("⇔", 0, (a, b) => a == b), // 同値
+                new BinaryOperator<bool, bool>("∥", 0, (a, b) => a || b), // 論理和
+                new BinaryOperator<bool, bool>("+", 0, (a, b) => a || b), // 論理和
+                new BinaryOperator<bool, bool>("·", 0, (a, b) => a && b), // 論理積
+                new BinaryOperator<bool, bool>("≔", 0, (a, b) => a == b), // 同値
+            };
+
+        private static readonly List<UnaryOperator<bool, bool>> UnaryLogicalOperators = new List<UnaryOperator<bool, bool>>
+            {
+                new UnaryOperator<bool, bool>("¬", 4, a => !a), // 否定
+                new UnaryOperator<bool, bool>("NOT", 4, a => !a), // 否定
+                new UnaryOperator<bool, bool>("˜", 4, a => !a), // 否定
+                new UnaryOperator<bool, bool>("!", 4, a => !a), // 否定
+            };
+
+        /// <summary>
+        /// 文字列と論理値のDictionary
+        /// </summary>
+        private static readonly Dictionary<string, bool> BooleanLiterals = new Dictionary<string, bool>
+        {
+            { "true", true },
+            { "false", false },
+            { "True", true },
+            { "False", false },
+            { "1", true },
+            { "0", false },
+            { "真", true },
+            { "偽", false },
+            { "yes", true },
+            { "no", false },
+            { "YES", true },
+            { "NO", false },
+            //{ "⊤", true },    // 二値型では表せないので新しいクラスを作るところから考える
+            //{ "⊥", false },
+        };
 
         // 括弧演算子
         private static readonly ParenthesisOperator LeftParenthesis = new ParenthesisOperator("(", 3);
@@ -304,10 +377,12 @@ namespace CalcEngine.IO
             var operatorSymbols = ArithmeticOperators.Select(op => Regex.Escape(op.Symbol))
                                 .Concat(ComparisonOperators.Select(op => Regex.Escape(op.Symbol)))
                                 .Concat(UnaryOperators.Select(op => Regex.Escape(op.Symbol)))
+                                .Concat(LogicalOperators.Select(op => Regex.Escape(op.Symbol)))
+                                .Concat(UnaryLogicalOperators.Select(op => Regex.Escape(op.Symbol)))
                                 .Concat(new[] { Regex.Escape(LeftParenthesis.Symbol), Regex.Escape(RightParenthesis.Symbol) });
 
             // 正規表現パターンを生成
-            var pattern = $@"\d+(\.\d+)?|{string.Join("|", operatorSymbols)}|\s+";
+            var pattern = $@"\d+(\.\d+)?|{string.Join("|", operatorSymbols)}|\b({string.Join("|", BooleanLiterals.Keys)})\b|\s+";
 
             var regex = new Regex(pattern);
 
@@ -364,7 +439,7 @@ namespace CalcEngine.IO
 
                 var right = operandStack.Pop();
                 var left = operandStack.Pop();
-                var expression = new ArithmeticExpression<TOperand>(left, right, binaryOperator);
+                var expression = new BinaryExpression<TOperand>(left, right, binaryOperator);
 
                 operandStack.Push(expression);
                 return;
@@ -414,6 +489,150 @@ namespace CalcEngine.IO
             if (operatorSymbol == LeftParenthesis.Symbol || operatorSymbol == RightParenthesis.Symbol)
             {
                 return 3;
+            }
+
+            throw new SyntaxErrorException($"無効な演算子: {operatorSymbol}");
+        }
+
+        /// <summary>
+        /// 論理演算式を解析するメソッド
+        /// </summary>
+        /// <param name="expression">式文字列</param>
+        /// <returns>解析結果の式木</returns>
+        /// <exception cref="SyntaxErrorException"></exception>
+        public static IExpression<bool> ParseLogical(string expression)
+        {
+            Debug.WriteLine($"ParseLogical: 開始 \"{expression}\"");
+            var operandStack = new Stack<IExpression<bool>>();
+            var operatorStack = new Stack<IOperator>();
+
+            // 式をトークンに分割
+            var tokens = Tokenize(expression);
+            Debug.WriteLine($"ParseLogical: トークン = [{string.Join(", ", tokens.Select(t => "\"" + t + "\""))}]");
+
+            try
+            {
+                var result = ParseLogical(tokens, 0);
+
+                Debug.WriteLine($"ParseLogical: 終了 \"{result} = {result.Evaluate()}\"");
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                throw new SyntaxErrorException($"数式 {expression} の構文が無効です。", ex);
+            }
+        }
+
+        private static IExpression<bool> ParseLogical(List<string> tokens, int nest)
+        {
+            var operandStack = new Stack<IExpression<bool>>();
+            var operatorStack = new Stack<IOperator>();
+
+            for (int index = 0; index < tokens.Count; index++)
+            {
+                var token = tokens.ElementAt(index);
+                if (BooleanLiterals.TryGetValue(token, out bool boolean))
+                {
+                    // 論理値の場合はオペランドスタックに追加
+                    IExpression<bool> constantExpression = new ConstantExpression<bool>(boolean);
+
+                    if (operandStack.Count == 0 && operatorStack.Any() && operatorStack.Peek() is UnaryOperator<bool, bool> unaryOperator)
+                    {
+                        // 左のオペランドなしで単項演算子がある場合は適用
+                        operatorStack.Pop();
+                        constantExpression = new UnaryExpression<bool>(constantExpression, unaryOperator);
+                    }
+
+                    operandStack.Push(constantExpression);
+                    Debug.WriteLine($"ParseLogical[{nest}-{index}]: 定数 = \"{constantExpression}\"");
+                }
+                else if (token == LeftParenthesis.Symbol)
+                {
+                    // 現在のindex+1から右括弧が見つかる手前までのtokensを切り出す
+                    var innerTokens = ExtractInnerTokens(tokens, index + 1);
+
+                    // 切り出したトークンを再帰的に解析
+                    var innerExpression = ParseLogical(innerTokens, nest + 1);
+                    var expression = new ParenthesisExpression<bool>(innerExpression);
+
+                    operandStack.Push(expression);
+                    Debug.WriteLine($"ParseLogical[{nest}-{index}]: 括弧式 = \"{expression}\"");
+
+                    // indexを更新
+                    index = index + innerTokens.Count + 1;
+                }
+                else if (operandStack.Count <= operatorStack.Count && UnaryLogicalOperators.Any(op => op.Symbol == token))
+                {
+                    // オペランドスタックの数がオペレータスタックの数より少ない場合は単項演算子として扱う
+                    var unaryOperator = UnaryLogicalOperators.First(op => op.Symbol == token);
+                    operatorStack.Push(unaryOperator);
+
+                    Debug.WriteLine($"ParseLogical[{nest}-{index}]: 単項演算子 = \"{unaryOperator}\"");
+                }
+                else if (LogicalOperators.Any(op => op.Symbol == token))
+                {
+                    Debug.WriteLine($"ParseLogical[{nest}-{index}]: 二項演算子 = \"{token}\"");
+
+                    // 演算子スタックにある演算子の優先順位が高い場合は適用
+                    while (operatorStack.Any() && HasHigherPrecedence(operatorStack.Peek(), token))
+                    {
+                        ApplyLogicalOperator(operandStack, operatorStack.Pop());
+                        Debug.WriteLine($"ParseLogical[{nest}-{index}]: 式 = \"{operandStack.Peek()}\"");
+                    }
+                    var binaryOperator = LogicalOperators.First(op => op.Symbol == token);
+                    operatorStack.Push(binaryOperator);
+                }
+                else
+                {
+                    throw new SyntaxErrorException($"無効なトークン: {token}");
+                }
+            }
+
+            while (operatorStack.Any())
+            {
+                ApplyLogicalOperator(operandStack, operatorStack.Pop());
+                Debug.WriteLine($"ParseLogical[{nest}]: 式 = \"{operandStack.Peek()}\"");
+            }
+
+            if (operandStack.Count != 1)
+            {
+                throw new SyntaxErrorException($"数式の構文が無効です。数式のルートが複数あります。operandStack=[{string.Join(", ", operandStack.Select(t => "\"" + t + "\""))}]");
+            }
+
+            return operandStack.Pop();
+        }
+
+        // 論理演算子を適用するメソッド
+        private static void ApplyLogicalOperator(Stack<IExpression<bool>> operandStack, IOperator operatorSymbol)
+        {
+            if (operatorSymbol is UnaryOperator<bool, bool> unaryOperator)
+            {
+                if (operandStack.Count < 1)
+                {
+                    throw new SyntaxErrorException("数式の構文が無効です。");
+                }
+
+                var operand = operandStack.Pop();
+                var expression = new UnaryExpression<bool>(operand, unaryOperator);
+
+                operandStack.Push(expression);
+                return;
+            }
+
+            if (operatorSymbol is BinaryOperator<bool, bool> binaryOperator)
+            {
+                if (operandStack.Count < 2)
+                {
+                    throw new SyntaxErrorException("数式の構文が無効です。二項演算子にオペランドが足りません。");
+                }
+
+                var right = operandStack.Pop();
+                var left = operandStack.Pop();
+                var expression = new BinaryExpression<bool>(left, right, binaryOperator);
+
+                operandStack.Push(expression);
+                return;
             }
 
             throw new SyntaxErrorException($"無効な演算子: {operatorSymbol}");

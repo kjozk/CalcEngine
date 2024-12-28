@@ -6,7 +6,7 @@ namespace CalcEngine.IO.Expressions
     /// 四則演算クラス
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public class ArithmeticExpression<T> : IExpression<T>
+    public class BinaryExpression<T> : IExpression<T>
         where T : struct, IComparable, IConvertible
     {
         /// <summary>
@@ -30,7 +30,7 @@ namespace CalcEngine.IO.Expressions
         /// <param name="left">左辺の式。</param>
         /// <param name="right">右辺の式。</param>
         /// <param name="operator">演算子。</param>
-        public ArithmeticExpression(IExpression<T> left, IExpression<T> right, BinaryOperator<T, T> @operator)
+        public BinaryExpression(IExpression<T> left, IExpression<T> right, BinaryOperator<T, T> @operator)
         {
             Left = left;
             Right = right;
