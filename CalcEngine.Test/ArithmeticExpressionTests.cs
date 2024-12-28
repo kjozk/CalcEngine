@@ -129,6 +129,37 @@ namespace CalcEngine.Test
             Assert.AreEqual(41152263, expression.Evaluate());
         }
 
+        // 余算のテストケース
+        [TestMethod]
+        public void ModulusTest()
+        {
+            IExpression<int> expression;
+
+            // 10 % 3 = 1
+            expression = ExpressionParser<int>.Parse("10 % 3");
+            Assert.AreEqual(1, expression.Evaluate());
+
+            // 20 % 4 = 0
+            expression = ExpressionParser<int>.Parse("20 % 4");
+            Assert.AreEqual(0, expression.Evaluate());
+
+            // 7 % 5 = 2
+            expression = ExpressionParser<int>.Parse("7 % 5");
+            Assert.AreEqual(2, expression.Evaluate());
+
+            // -10 % 3 = -1
+            expression = ExpressionParser<int>.Parse("-10 % 3");
+            Assert.AreEqual(-1, expression.Evaluate());
+
+            // 10 % -3 = 1
+            expression = ExpressionParser<int>.Parse("10 % -3");
+            Assert.AreEqual(1, expression.Evaluate());
+
+            // -10 % -3 = -1
+            expression = ExpressionParser<int>.Parse("-10 % -3");
+            Assert.AreEqual(-1, expression.Evaluate());
+        }
+
         // 混合演算のテストケース
         [TestMethod]
         public void MixedOperationsTest()

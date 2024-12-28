@@ -17,38 +17,41 @@ namespace CalcEngine.IO
         /// 算術演算子のリスト
         /// </summary>
         private static readonly List<BinaryOperator<TResult, TResult>> ArithmeticOperators = new List<BinaryOperator<TResult, TResult>>
-        {
-            new BinaryOperator<TResult, TResult>("+", 1, (a, b) => (dynamic)a + (dynamic)b),
-            new BinaryOperator<TResult, TResult>("-", 1, (a, b) => (dynamic)a - (dynamic)b),
-            new BinaryOperator<TResult, TResult>("*", 2, (a, b) => (dynamic)a * (dynamic)b),
-            new BinaryOperator<TResult, TResult>("×", 2, (a, b) => (dynamic)a * (dynamic)b),
-            new BinaryOperator<TResult, TResult>("/", 2, (a, b) => (dynamic)a / (dynamic)b),
-            new BinaryOperator<TResult, TResult>("÷", 2, (a, b) => (dynamic)a / (dynamic)b)
-        };
+            {
+                new BinaryOperator<TResult, TResult>("+", 1, (a, b) => (dynamic)a + (dynamic)b),
+                new BinaryOperator<TResult, TResult>("-", 1, (a, b) => (dynamic)a - (dynamic)b),
+                new BinaryOperator<TResult, TResult>("*", 2, (a, b) => (dynamic)a * (dynamic)b),
+                new BinaryOperator<TResult, TResult>("×", 2, (a, b) => (dynamic)a * (dynamic)b),
+                new BinaryOperator<TResult, TResult>("/", 2, (a, b) => (dynamic)a / (dynamic)b),
+                new BinaryOperator<TResult, TResult>("÷", 2, (a, b) => (dynamic)a / (dynamic)b),
+                new BinaryOperator<TResult, TResult>("%", 2, (a, b) => (dynamic)a % (dynamic)b) // 余算演算子
+            };
 
         /// <summary>
         /// 比較演算子のリスト
         /// </summary>
         private static readonly List<BinaryOperator<TResult, bool>> ComparisonOperators = new List<BinaryOperator<TResult, bool>>
-        {
-            new BinaryOperator<TResult, bool>("≧", 0, (a, b) => (dynamic)a >= (dynamic)b),
-            new BinaryOperator<TResult, bool>("≦", 0, (a, b) => (dynamic)a <= (dynamic)b),
-            new BinaryOperator<TResult, bool>(">=", 0, (a, b) => (dynamic)a >= (dynamic)b),
-            new BinaryOperator<TResult, bool>("<=", 0, (a, b) => (dynamic)a <= (dynamic)b),
-            new BinaryOperator<TResult, bool>("==", 0, (a, b) => (dynamic)a == (dynamic)b),
-            // > よりも >= が先に評価されるように並べる
-            new BinaryOperator<TResult, bool>(">", 0, (a, b) => (dynamic)a > (dynamic)b),
-            new BinaryOperator<TResult, bool>("<", 0, (a, b) => (dynamic)a < (dynamic)b),
-        };
+            {
+                new BinaryOperator<TResult, bool>("≧", 0, (a, b) => (dynamic)a >= (dynamic)b),
+                new BinaryOperator<TResult, bool>("≦", 0, (a, b) => (dynamic)a <= (dynamic)b),
+                new BinaryOperator<TResult, bool>(">=", 0, (a, b) => (dynamic)a >= (dynamic)b),
+                new BinaryOperator<TResult, bool>("<=", 0, (a, b) => (dynamic)a <= (dynamic)b),
+                new BinaryOperator<TResult, bool>("==", 0, (a, b) => (dynamic)a == (dynamic)b),
+                new BinaryOperator<TResult, bool>("!=", 0, (a, b) => (dynamic)a != (dynamic)b), // 不等号演算子
+                new BinaryOperator<TResult, bool>("≠", 0, (a, b) => (dynamic)a != (dynamic)b), // 不等号演算子
+                // > よりも >= が先に評価されるように並べる
+                new BinaryOperator<TResult, bool>(">", 0, (a, b) => (dynamic)a > (dynamic)b),
+                new BinaryOperator<TResult, bool>("<", 0, (a, b) => (dynamic)a < (dynamic)b),
+            };
 
         /// <summary>
         /// 単項演算子のリスト
         /// </summary>
         private static readonly List<UnaryOperator<TResult, TResult>> UnaryOperators = new List<UnaryOperator<TResult, TResult>>
-        {
-            new UnaryOperator<TResult, TResult>("+", 4, a => +(dynamic)a),
-            new UnaryOperator<TResult, TResult>("-", 4, a => -(dynamic)a),
-        };
+            {
+                new UnaryOperator<TResult, TResult>("+", 4, a => +(dynamic)a),
+                new UnaryOperator<TResult, TResult>("-", 4, a => -(dynamic)a),
+            };
 
         // 括弧演算子
         private static readonly ParenthesisOperator LeftParenthesis = new ParenthesisOperator("(", 3);

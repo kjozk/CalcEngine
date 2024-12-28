@@ -217,5 +217,44 @@ namespace CalcEngine.Test
             expression = ExpressionParser<double>.ParseComparison("5 <= 2 * 2");
             Assert.IsFalse(expression.Evaluate());
         }
+
+        // 不等号のテストケース
+        [TestMethod]
+        public void NotEqualToTest()
+        {
+            IExpression<bool> expression;
+
+            // 5 != 3 = true
+            expression = ExpressionParser<double>.ParseComparison("5 != 3");
+            Assert.IsTrue(expression.Evaluate());
+
+            // 5 ≠ 3 = true
+            expression = ExpressionParser<double>.ParseComparison("5 ≠ 3");
+            Assert.IsTrue(expression.Evaluate());
+
+            // 5 != 5 = false
+            expression = ExpressionParser<double>.ParseComparison("5 != 5");
+            Assert.IsFalse(expression.Evaluate());
+
+            // 3 + 2 != 5 = false
+            expression = ExpressionParser<double>.ParseComparison("3 + 2 != 5");
+            Assert.IsFalse(expression.Evaluate());
+
+            // 3 + 3 != 5 = true
+            expression = ExpressionParser<double>.ParseComparison("3 + 3 != 5");
+            Assert.IsTrue(expression.Evaluate());
+
+            // 10 / 2 != 5 = false
+            expression = ExpressionParser<double>.ParseComparison("10 / 2 != 5");
+            Assert.IsFalse(expression.Evaluate());
+
+            // 2 * 3 != 6 = false
+            expression = ExpressionParser<double>.ParseComparison("2 * 3 != 6");
+            Assert.IsFalse(expression.Evaluate());
+
+            // 2 * 2 != 5 = true
+            expression = ExpressionParser<double>.ParseComparison("2 * 2 != 5");
+            Assert.IsTrue(expression.Evaluate());
+        }
     }
 }
