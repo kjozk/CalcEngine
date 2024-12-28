@@ -34,7 +34,7 @@ Console.WriteLine(result); // 出力: True
 using CalcEngine.IO;
 using CalcEngine.IO.Expressions;
 
-string expression = "true AND false";
+string expression = "真 ⊕ 偽";
 IExpression<bool> parsedExpression = ExpressionParser<bool>.ParseLogical(expression);
 bool result = parsedExpression.Evaluate();
 Console.WriteLine(result); // 出力: False
@@ -96,11 +96,8 @@ Console.WriteLine(result); // 出力: False
 - `∥` : 論理和
 - `+` : 論理和
 - `·` : 論理積
-- `≔` : 同値
 - `˜` : 否定
 - `!` : 否定
-- `⊤` : 真
-- `⊥` : 偽
 
 ## ライセンス
 
