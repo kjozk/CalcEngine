@@ -248,6 +248,69 @@ namespace CalcEngine.Test
             // 5 * (6 + 2) - 3 = 37
             expression = ExpressionParser<int>.Parse("5 * (6 + 2) - 3");
             Assert.AreEqual(37, expression.Evaluate());
+
+            // 10 + (2 * 3) - (4 / 2) = 14
+            expression = ExpressionParser<int>.Parse("10 + (2 * 3) - (4 / 2)");
+            Assert.AreEqual(14, expression.Evaluate());
+
+            // (5 + 3) * (2 - 1) + 4 / 2 = 10
+            expression = ExpressionParser<int>.Parse("(5 + 3) * (2 - 1) + 4 / 2");
+            Assert.AreEqual(10, expression.Evaluate());
+
+            // 100 / (5 + 5) * 2 = 20
+            expression = ExpressionParser<int>.Parse("100 / (5 + 5) * 2");
+            Assert.AreEqual(20, expression.Evaluate());
+
+            // (10 + 20) * (30 / 5) - 40 = 140
+            expression = ExpressionParser<int>.Parse("(10 + 20) * (30 / 5) - 40");
+            Assert.AreEqual(140, expression.Evaluate());
+        }
+
+        // 複雑な数式のテストケース (double)
+        [TestMethod]
+        public void ComplexExpressionDoubleTest()
+        {
+            IExpression<double> expression;
+
+            // (3.5 + 4.5) * 2 = 16
+            expression = ExpressionParser<double>.Parse("(3.5 + 4.5) * 2");
+            Assert.AreEqual(16, expression.Evaluate());
+
+            // 3.2 + 4.8 * 2 = 12.8
+            expression = ExpressionParser<double>.Parse("3.2 + 4.8 * 2");
+            Assert.AreEqual(12.8, expression.Evaluate());
+
+            // (1.1 + 2.2) * (3.3 - 4.4) / 2.2 = -1.65（誤差を許容）
+            expression = ExpressionParser<double>.Parse("(1.1 + 2.2) * (3.3 - 4.4) / 2.2");
+            Assert.AreEqual(-1.65, expression.Evaluate(), 0.0001);
+
+            // 10.5 / (2.5 + 3.5) = 1.75
+            expression = ExpressionParser<double>.Parse("10.5 / (2.5 + 3.5)");
+            Assert.AreEqual(1.75, expression.Evaluate(), 0.0001);
+
+            // (2.2 + 3.3) * (4.4 - 1.1) = 18.15
+            expression = ExpressionParser<double>.Parse("(2.2 + 3.3) * (4.4 - 1.1)");
+            Assert.AreEqual(18.15, expression.Evaluate(), 0.0001);
+
+            // 5.5 * (6.6 + 2.2) - 3.3 = 45.1
+            expression = ExpressionParser<double>.Parse("5.5 * (6.6 + 2.2) - 3.3");
+            Assert.AreEqual(45.1, expression.Evaluate(), 0.0001);
+
+            // 10.1 + (2.2 * 3.3) - (4.4 / 2.2) = 15.36
+            expression = ExpressionParser<double>.Parse("10.1 + (2.2 * 3.3) - (4.4 / 2.2)");
+            Assert.AreEqual(15.36, expression.Evaluate(), 0.0001);
+
+            // (5.5 + 3.3) * (2.2 - 1.1) + 4.4 / 2.2 = 11.68
+            expression = ExpressionParser<double>.Parse("(5.5 + 3.3) * (2.2 - 1.1) + 4.4 / 2.2");
+            Assert.AreEqual(11.68, expression.Evaluate(), 0.0001);
+
+            // 100.5 / (5.5 + 5.5) * 2.2 = 20.1
+            expression = ExpressionParser<double>.Parse("100.5 / (5.5 + 5.5) * 2.2");
+            Assert.AreEqual(20.1, expression.Evaluate(), 0.0001);
+
+            // (10.1 + 20.2) * (30.3 / 5.5) - 40.4 = 126.52545...
+            expression = ExpressionParser<double>.Parse("(10.1 + 20.2) * (30.3 / 5.5) - 40.4");
+            Assert.AreEqual(126.52545, expression.Evaluate(), 0.0001);
         }
     }
 }

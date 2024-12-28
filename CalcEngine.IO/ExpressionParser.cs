@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
 using System.Text.RegularExpressions;
 using CalcEngine.IO.Expressions;
 using CalcEngine.IO.Operators;
@@ -81,7 +82,7 @@ namespace CalcEngine.IO
         /// <exception cref="SyntaxErrorException"></exception>
         public static IExpression<TResult> Parse(string expression)
         {
-            Debug.WriteLine($"Parse: 開始 expression = \"{expression}\"");
+            Debug.WriteLine($"Parse: 開始 \"{expression}\"");
             var operandStack = new Stack<IExpression<TResult>>();
             var operatorStack = new Stack<IOperator>();
 
@@ -93,7 +94,7 @@ namespace CalcEngine.IO
             {
                 var result = Parse(tokens, 0);
 
-                Debug.WriteLine($"Parse: 終了 result = \"{result}\"");
+                Debug.WriteLine($"Parse: 終了 \"{result} = {result.Evaluate()}\"");
 
                 return result;
             }
@@ -103,6 +104,13 @@ namespace CalcEngine.IO
             }
         }
 
+        /// <summary>
+        /// 式を解析するメソッド
+        /// </summary>
+        /// <param name="tokens">トークンのリスト</param>
+        /// <param name="nest">解析のネスト数</param>
+        /// <returns></returns>
+        /// <exception cref="SyntaxErrorException"></exception>
         public static IExpression<TResult> Parse(List<string> tokens, int nest)
         {
             var operandStack = new Stack<IExpression<TResult>>();
@@ -171,6 +179,7 @@ namespace CalcEngine.IO
             while (operatorStack.Any())
             {
                 ApplyOperator(operandStack, operatorStack.Pop());
+                Debug.WriteLine($"Parse[{nest}]: 式 = \"{operandStack.Peek()}\"");
             }
 
             if (operandStack.Count != 1)
@@ -181,26 +190,35 @@ namespace CalcEngine.IO
             return operandStack.Pop();
         }
 
-        private static List<string> ExtractInnerTokens(List<string> tokens, int innerIndex)
+        /// <summary>
+        /// 括弧内のトークンを切り出すメソッド
+        /// </summary>
+        /// <param name="tokens">基となるトークン</param>
+        /// <param name="startIndex"></param>
+        /// <returns></returns>
+        /// <exception cref="SyntaxErrorException"></exception>
+        private static List<string> ExtractInnerTokens(List<string> tokens, int startIndex)
         {
             var innerTokens = new List<string>();
-            int parenthesisCount = 1;
-            while (innerIndex < tokens.Count() && parenthesisCount > 0)
+            int parenthesisCount = 1;   // 閉じられていない括弧の数
+
+            int index = startIndex;
+            while (index < tokens.Count && parenthesisCount > 0)
             {
-                if (tokens.ElementAt(innerIndex) == LeftParenthesis.Symbol)
+                if (tokens.ElementAt(index) == LeftParenthesis.Symbol)
                 {
                     parenthesisCount++;
                 }
-                else if (tokens.ElementAt(innerIndex) == RightParenthesis.Symbol)
+                else if (tokens.ElementAt(index) == RightParenthesis.Symbol)
                 {
                     parenthesisCount--;
                 }
 
                 if (parenthesisCount > 0)
                 {
-                    innerTokens.Add(tokens.ElementAt(innerIndex));
+                    innerTokens.Add(tokens.ElementAt(index));
                 }
-                innerIndex++;
+                index++;
             }
 
             if (parenthesisCount != 0)

@@ -1,5 +1,9 @@
 ﻿namespace CalcEngine.IO.Expressions
 {
+    /// <summary>
+    /// カッコで囲まれた式を表すクラス。
+    /// </summary>
+    /// <typeparam name="TResult"></typeparam>
     public class ParenthesisExpression<TResult> : IExpression<TResult> 
             where TResult : struct, IConvertible, IComparable, IEquatable<TResult>
     {
