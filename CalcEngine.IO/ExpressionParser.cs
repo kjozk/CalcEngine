@@ -241,7 +241,7 @@ namespace CalcEngine.IO
                     Debug.WriteLine($"Parse[{nest}-{index}]: 二項演算子 = \"{token}\"");
 
                     // 演算子スタックにある演算子の優先順位が高い場合は適用
-                    while (operatorStack.Any() && HasHigherPrecedence(operatorStack.Peek(), token))
+                    while (operatorStack.Any() && HasHigherPrecedence(operatorStack.Peek(), token, GetPrecedence))
                     {
                         ApplyOperator(operandStack, operatorStack.Pop());
                         Debug.WriteLine($"Parse[{nest}-{index}]: 式 = \"{operandStack.Peek()}\"");
@@ -464,7 +464,7 @@ namespace CalcEngine.IO
         }
 
         // 演算子の優先順位を比較するメソッド
-        private static bool HasHigherPrecedence(IOperator operator1, string operator2)
+        private static bool HasHigherPrecedence(IOperator operator1, string operator2, Func<string, int> precedenceGetter)
         {
             // 括弧は優先順位の比較を行わない
             if (operator1 == LeftParenthesis || operator2 == LeftParenthesis.Symbol)
@@ -475,8 +475,8 @@ namespace CalcEngine.IO
             {
                 return true; // 括弧が閉じられる場合は必ず優先
             }
-            int precedence1 = GetPrecedence(operator1.Symbol);
-            int precedence2 = GetPrecedence(operator2);
+            int precedence1 = precedenceGetter(operator1.Symbol);
+            int precedence2 = precedenceGetter(operator2);
             return precedence1 >= precedence2;
         }
 
@@ -484,6 +484,19 @@ namespace CalcEngine.IO
         private static int GetPrecedence(string operatorSymbol)
         {
             var arithmeticOperator = ArithmeticOperators.FirstOrDefault(op => op.Symbol == operatorSymbol);
+            if (arithmeticOperator != null) return arithmeticOperator.Precedence;
+
+            if (operatorSymbol == LeftParenthesis.Symbol || operatorSymbol == RightParenthesis.Symbol)
+            {
+                return 3;
+            }
+
+            throw new SyntaxErrorException($"無効な演算子: {operatorSymbol}");
+        }
+
+        private static int GetLogicalPrecedence(string operatorSymbol)
+        {
+            var arithmeticOperator = LogicalOperators.FirstOrDefault(op => op.Symbol == operatorSymbol);
             if (arithmeticOperator != null) return arithmeticOperator.Precedence;
 
             if (operatorSymbol == LeftParenthesis.Symbol || operatorSymbol == RightParenthesis.Symbol)
@@ -575,7 +588,7 @@ namespace CalcEngine.IO
                     Debug.WriteLine($"ParseLogical[{nest}-{index}]: 二項演算子 = \"{token}\"");
 
                     // 演算子スタックにある演算子の優先順位が高い場合は適用
-                    while (operatorStack.Any() && HasHigherPrecedence(operatorStack.Peek(), token))
+                    while (operatorStack.Any() && HasHigherPrecedence(operatorStack.Peek(), token, GetLogicalPrecedence))
                     {
                         ApplyLogicalOperator(operandStack, operatorStack.Pop());
                         Debug.WriteLine($"ParseLogical[{nest}-{index}]: 式 = \"{operandStack.Peek()}\"");
