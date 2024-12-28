@@ -2,7 +2,7 @@
 {
     // 定数式の具象クラス
     public class ConstantExpression<T> : IExpression<T>
-        where T : struct, IConvertible
+        where T : struct, IComparable, IConvertible
     {
         private T Value { get; }
 
@@ -31,7 +31,7 @@
         /// <returns>定数の文字列表現。</returns>
         public override string ToString()
         {
-            return this.Value.ToString();
+            return this.Value.ToString() ?? string.Empty;
         }
     }
 }
