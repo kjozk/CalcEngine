@@ -55,7 +55,7 @@ namespace CalcEngine.IO.Expressions
         /// <returns>四則演算式の文字列表現。</returns>
         public override string ToString()
         {
-            return $"({Left} {Operator.Symbol} {Right})";
+            return $"{Left} {Operator.Symbol} {Right}";
         }
     }
 }

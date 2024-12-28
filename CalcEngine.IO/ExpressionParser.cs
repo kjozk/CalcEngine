@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Diagnostics;
+using System.Text.RegularExpressions;
 using CalcEngine.IO.Expressions;
 using CalcEngine.IO.Operators;
 
@@ -80,52 +81,86 @@ namespace CalcEngine.IO
         /// <exception cref="SyntaxErrorException"></exception>
         public static IExpression<TResult> Parse(string expression)
         {
+            Debug.WriteLine($"Parse: 開始 expression = \"{expression}\"");
             var operandStack = new Stack<IExpression<TResult>>();
             var operatorStack = new Stack<IOperator>();
-            var parenthesisStack = new Stack<ParenthesisOperator>(); // 括弧を追跡するスタック
 
             // 式をトークンに分割
             var tokens = Tokenize(expression);
+            Debug.WriteLine($"Parse: トークン = [{string.Join(", ", tokens.Select(t => "\"" + t + "\""))}]");
 
-            foreach (var token in tokens)
+            try
             {
+                var result = Parse(tokens, 0);
+
+                Debug.WriteLine($"Parse: 終了 result = \"{result}\"");
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                throw new SyntaxErrorException($"数式 {expression} の構文が無効です。", ex);
+            }
+        }
+
+        public static IExpression<TResult> Parse(List<string> tokens, int nest)
+        {
+            var operandStack = new Stack<IExpression<TResult>>();
+            var operatorStack = new Stack<IOperator>();
+
+            for (int index = 0; index < tokens.Count; index++)
+            {
+                var token = tokens.ElementAt(index);
                 if (TryParseToken(token, out TResult number))
                 {
                     // 数値の場合はオペランドスタックに追加
-                    operandStack.Push(new ConstantExpression<TResult>(number));
+                    IExpression<TResult> constantExpression = new ConstantExpression<TResult>(number);
+
+                    if (operandStack.Count == 0 && operatorStack.Any() && operatorStack.Peek() is UnaryOperator<TResult, TResult> unaryOperator)
+                    {
+                        // 左のオペランドなしで単項演算子がある場合は適用
+                        operatorStack.Pop();
+                        constantExpression = new UnaryExpression<TResult>(constantExpression, unaryOperator);
+                    }
+
+                    operandStack.Push(constantExpression);
+                    Debug.WriteLine($"Parse[{nest}-{index}]: 定数 = \"{constantExpression}\"");
                 }
                 else if (token == LeftParenthesis.Symbol)
                 {
-                    // 左括弧の場合はオペレータスタックに追加
-                    operatorStack.Push(LeftParenthesis);    // TODO: ここでLeftParenthesisを使うのはおかしい
-                    parenthesisStack.Push(LeftParenthesis); // 左括弧をスタックに追加
+                    // 現在のindex+1から右括弧が見つかる手前までのtokensを切り出す
+                    var innerTokens = ExtractInnerTokens(tokens, index + 1);
+
+                    // 切り出したトークンを再帰的に解析
+                    var innerExpression = Parse(innerTokens, nest + 1);
+                    var expression = new ParenthesisExpression<TResult>(innerExpression);
+
+                    operandStack.Push(expression);
+                    Debug.WriteLine($"Parse[{nest}-{index}]: 括弧式 = \"{expression}\"");
+
+                    // indexを更新
+                    index = index + innerTokens.Count + 1;
                 }
-                else if (token == RightParenthesis.Symbol)
+                else if (operandStack.Count <= operatorStack.Count && UnaryOperators.Any(op => op.Symbol == token))
                 {
-                    // 右括弧の場合は対応する左括弧までオペレータを適用
-                    while (operatorStack.Count > 0 && operatorStack.Peek() != LeftParenthesis)
-                    {
-                        ApplyOperator(operandStack, operatorStack.Pop());
-                    }
-                    if (operatorStack.Count == 0 || operatorStack.Pop() != LeftParenthesis)
-                    {
-                        throw new SyntaxErrorException("対応する左括弧がありません。");
-                    }
-                    parenthesisStack.Pop(); // 対応する左括弧をスタックから削除
-                }
-                else if (operandStack.Count == 0 && UnaryOperators.Any(op => op.Symbol == token))
-                {
-                    // 式の先頭に単項演算子がある場合、オペランドスタックに追加
-                    operatorStack.Push(UnaryOperators.First(op => op.Symbol == token));
+                    // オペランドスタックの数がオペレータスタックの数より少ない場合は単項演算子として扱う
+                    var unaryOperator = UnaryOperators.First(op => op.Symbol == token);
+                    operatorStack.Push(unaryOperator);
+
+                    Debug.WriteLine($"Parse[{nest}-{index}]: 単項演算子 = \"{unaryOperator}\"");
                 }
                 else if (ArithmeticOperators.Any(op => op.Symbol == token))
                 {
-                    // 四則演算子の場合はオペレータスタックに追加
-                    while (operatorStack.Count > 0 && HasHigherPrecedence(operatorStack.Peek(), token))
+                    Debug.WriteLine($"Parse[{nest}-{index}]: 二項演算子 = \"{token}\"");
+
+                    // 演算子スタックにある演算子の優先順位が高い場合は適用
+                    while (operatorStack.Any() && HasHigherPrecedence(operatorStack.Peek(), token))
                     {
                         ApplyOperator(operandStack, operatorStack.Pop());
+                        Debug.WriteLine($"Parse[{nest}-{index}]: 式 = \"{operandStack.Peek()}\"");
                     }
-                    operatorStack.Push(ArithmeticOperators.First(op => op.Symbol == token));
+                    var binaryOperator = ArithmeticOperators.First(op => op.Symbol == token);
+                    operatorStack.Push(binaryOperator);
                 }
                 else
                 {
@@ -133,23 +168,47 @@ namespace CalcEngine.IO
                 }
             }
 
-            while (operatorStack.Count > 0)
+            while (operatorStack.Any())
             {
                 ApplyOperator(operandStack, operatorStack.Pop());
             }
 
-            // 解析後に括弧が残っていれば対応が取れていない
-            if (parenthesisStack.Count > 0)
-            {
-                throw new SyntaxErrorException("対応する右括弧がありません。左括弧が {parenthesisStack.Count} 個多いです。 expression=\"{expression}\", ");
-            }
-
             if (operandStack.Count != 1)
             {
-                throw new SyntaxErrorException($"数式の構文が無効です。数式のルートが複数あります。expression=\"{expression}\", operandStack=[{string.Join(",", "\"" + operandStack + "\"")}]");
+                throw new SyntaxErrorException($"数式の構文が無効です。数式のルートが複数あります。operandStack=[{string.Join(", ", operandStack.Select(t => "\"" + t + "\""))}]");
             }
 
             return operandStack.Pop();
+        }
+
+        private static List<string> ExtractInnerTokens(List<string> tokens, int innerIndex)
+        {
+            var innerTokens = new List<string>();
+            int parenthesisCount = 1;
+            while (innerIndex < tokens.Count() && parenthesisCount > 0)
+            {
+                if (tokens.ElementAt(innerIndex) == LeftParenthesis.Symbol)
+                {
+                    parenthesisCount++;
+                }
+                else if (tokens.ElementAt(innerIndex) == RightParenthesis.Symbol)
+                {
+                    parenthesisCount--;
+                }
+
+                if (parenthesisCount > 0)
+                {
+                    innerTokens.Add(tokens.ElementAt(innerIndex));
+                }
+                innerIndex++;
+            }
+
+            if (parenthesisCount != 0)
+            {
+                throw new SyntaxErrorException("対応する右括弧がありません。");
+            }
+
+            return innerTokens;
         }
 
         /// <summary>
@@ -160,40 +219,19 @@ namespace CalcEngine.IO
         private static List<string> Tokenize(string expression)
         {
             var tokens = new List<string>();
-            var number = new StringBuilder();
-            bool lastCharWasOperator = true;    // 式の先頭に単項演算子がある場合を考慮して初期値をtrueに設定
+            // 正規表現パターンを定義
+            // \d+(\.\d+)? : 整数または小数
+            // [+\-*/×÷()] : 演算子と括弧
+            // \s+ : 空白文字
+            var regex = new Regex(@"\d+(\.\d+)?|[+\-*/×÷()]|\s+");
 
-            foreach (var ch in expression)
+            foreach (Match match in regex.Matches(expression))
             {
-                if (char.IsDigit(ch) || ch == '.')  // TODO: ドイツ語の場合はカンマも許可すべき
+                var token = match.Value;
+                if (!string.IsNullOrWhiteSpace(token))
                 {
-                    // 数値の場合は数値文字列に追加
-                    number.Append(ch);
-                    lastCharWasOperator = false;
+                    tokens.Add(token);
                 }
-                else if (!char.IsWhiteSpace(ch))
-                {
-                    if (number.Length > 0)
-                    {
-                        tokens.Add(number.ToString());
-                        number.Clear();
-                    }
-
-                    if (UnaryOperators.Any(ope => ope.Symbol == ch.ToString()) && lastCharWasOperator)  // TODO: 単項演算子は1文字である必要あり
-                    {
-                        number.Append(ch); // 単項演算子を数字と一緒に処理
-                    }
-                    else
-                    {
-                        tokens.Add(ch.ToString());
-                        lastCharWasOperator = true;
-                    }
-                }
-            }
-
-            if (number.Length > 0)
-            {
-                tokens.Add(number.ToString());
             }
 
             return tokens;
@@ -225,7 +263,9 @@ namespace CalcEngine.IO
                 }
 
                 var operand = operandStack.Pop();
-                operandStack.Push(new UnaryExpression<TResult>(operand, unaryOperator));
+                var expression = new UnaryExpression<TResult>(operand, unaryOperator);
+
+                operandStack.Push(expression);
                 return;
             }
 
@@ -233,12 +273,14 @@ namespace CalcEngine.IO
             {
                 if (operandStack.Count < 2)
                 {
-                    throw new SyntaxErrorException("数式の構文が無効です。");
+                    throw new SyntaxErrorException("数式の構文が無効です。二項演算子にオペランドが足りません。");
                 }
 
                 var right = operandStack.Pop();
                 var left = operandStack.Pop();
-                operandStack.Push(new ArithmeticExpression<TResult>(left, right, binaryOperator));
+                var expression = new ArithmeticExpression<TResult>(left, right, binaryOperator);
+
+                operandStack.Push(expression);
                 return;
             }
 
@@ -250,7 +292,10 @@ namespace CalcEngine.IO
                 }
 
                 var innerExpression = operandStack.Pop();
-                operandStack.Push(new ParenthesisExpression<TResult>(innerExpression));
+
+                var expression = new ParenthesisExpression<TResult>(innerExpression);
+
+                operandStack.Push(expression);
                 return;
             }
 
