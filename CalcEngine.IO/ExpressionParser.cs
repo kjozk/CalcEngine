@@ -9,48 +9,48 @@ namespace CalcEngine.IO
     /// <summary>
     /// 文字列から数式を解析するクラス。
     /// </summary>
-    /// <typeparam name="TResult">数式の結果の型</typeparam>
-    public static class ExpressionParser<TResult>
-            where TResult : struct, IConvertible, IComparable, IEquatable<TResult>
+    /// <typeparam name="TOperand">オペランドの型</typeparam>
+    public static class ExpressionParser<TOperand>
+            where TOperand : struct, IConvertible, IComparable, IEquatable<TOperand>
     {
         /// <summary>
         /// 算術演算子のリスト
         /// </summary>
-        private static readonly List<BinaryOperator<TResult, TResult>> ArithmeticOperators = new List<BinaryOperator<TResult, TResult>>
+        private static readonly List<BinaryOperator<TOperand, TOperand>> ArithmeticOperators = new List<BinaryOperator<TOperand, TOperand>>
             {
-                new BinaryOperator<TResult, TResult>("+", 1, (a, b) => (dynamic)a + (dynamic)b),
-                new BinaryOperator<TResult, TResult>("-", 1, (a, b) => (dynamic)a - (dynamic)b),
-                new BinaryOperator<TResult, TResult>("*", 2, (a, b) => (dynamic)a * (dynamic)b),
-                new BinaryOperator<TResult, TResult>("×", 2, (a, b) => (dynamic)a * (dynamic)b),
-                new BinaryOperator<TResult, TResult>("/", 2, (a, b) => (dynamic)a / (dynamic)b),
-                new BinaryOperator<TResult, TResult>("÷", 2, (a, b) => (dynamic)a / (dynamic)b),
-                new BinaryOperator<TResult, TResult>("%", 2, (a, b) => (dynamic)a % (dynamic)b) // 余算演算子
+                new BinaryOperator<TOperand, TOperand>("+", 1, (a, b) => (dynamic)a + (dynamic)b),
+                new BinaryOperator<TOperand, TOperand>("-", 1, (a, b) => (dynamic)a - (dynamic)b),
+                new BinaryOperator<TOperand, TOperand>("*", 2, (a, b) => (dynamic)a * (dynamic)b),
+                new BinaryOperator<TOperand, TOperand>("×", 2, (a, b) => (dynamic)a * (dynamic)b),
+                new BinaryOperator<TOperand, TOperand>("/", 2, (a, b) => (dynamic)a / (dynamic)b),
+                new BinaryOperator<TOperand, TOperand>("÷", 2, (a, b) => (dynamic)a / (dynamic)b),
+                new BinaryOperator<TOperand, TOperand>("%", 2, (a, b) => (dynamic)a % (dynamic)b) // 余算演算子
             };
 
         /// <summary>
         /// 比較演算子のリスト
         /// </summary>
-        private static readonly List<BinaryOperator<TResult, bool>> ComparisonOperators = new List<BinaryOperator<TResult, bool>>
+        private static readonly List<BinaryOperator<TOperand, bool>> ComparisonOperators = new List<BinaryOperator<TOperand, bool>>
             {
-                new BinaryOperator<TResult, bool>("≧", 0, (a, b) => (dynamic)a >= (dynamic)b),
-                new BinaryOperator<TResult, bool>("≦", 0, (a, b) => (dynamic)a <= (dynamic)b),
-                new BinaryOperator<TResult, bool>(">=", 0, (a, b) => (dynamic)a >= (dynamic)b),
-                new BinaryOperator<TResult, bool>("<=", 0, (a, b) => (dynamic)a <= (dynamic)b),
-                new BinaryOperator<TResult, bool>("==", 0, (a, b) => (dynamic)a == (dynamic)b),
-                new BinaryOperator<TResult, bool>("!=", 0, (a, b) => (dynamic)a != (dynamic)b), // 不等号演算子
-                new BinaryOperator<TResult, bool>("≠", 0, (a, b) => (dynamic)a != (dynamic)b), // 不等号演算子
+                new BinaryOperator<TOperand, bool>("≧", 0, (a, b) => (dynamic)a >= (dynamic)b),
+                new BinaryOperator<TOperand, bool>("≦", 0, (a, b) => (dynamic)a <= (dynamic)b),
+                new BinaryOperator<TOperand, bool>(">=", 0, (a, b) => (dynamic)a >= (dynamic)b),
+                new BinaryOperator<TOperand, bool>("<=", 0, (a, b) => (dynamic)a <= (dynamic)b),
+                new BinaryOperator<TOperand, bool>("==", 0, (a, b) => (dynamic)a == (dynamic)b),
+                new BinaryOperator<TOperand, bool>("!=", 0, (a, b) => (dynamic)a != (dynamic)b), // 不等号演算子
+                new BinaryOperator<TOperand, bool>("≠", 0, (a, b) => (dynamic)a != (dynamic)b), // 不等号演算子
                 // > よりも >= が先に評価されるように並べる
-                new BinaryOperator<TResult, bool>(">", 0, (a, b) => (dynamic)a > (dynamic)b),
-                new BinaryOperator<TResult, bool>("<", 0, (a, b) => (dynamic)a < (dynamic)b),
+                new BinaryOperator<TOperand, bool>(">", 0, (a, b) => (dynamic)a > (dynamic)b),
+                new BinaryOperator<TOperand, bool>("<", 0, (a, b) => (dynamic)a < (dynamic)b),
             };
 
         /// <summary>
         /// 単項演算子のリスト
         /// </summary>
-        private static readonly List<UnaryOperator<TResult, TResult>> UnaryOperators = new List<UnaryOperator<TResult, TResult>>
+        private static readonly List<UnaryOperator<TOperand, TOperand>> UnaryOperators = new List<UnaryOperator<TOperand, TOperand>>
             {
-                new UnaryOperator<TResult, TResult>("+", 4, a => +(dynamic)a),
-                new UnaryOperator<TResult, TResult>("-", 4, a => -(dynamic)a),
+                new UnaryOperator<TOperand, TOperand>("+", 4, a => +(dynamic)a),
+                new UnaryOperator<TOperand, TOperand>("-", 4, a => -(dynamic)a),
             };
 
         // 括弧演算子
@@ -66,7 +66,7 @@ namespace CalcEngine.IO
         /// true: 解析成功
         /// false: 解析失敗
         /// </returns>
-        public static bool TryParse(string expression, out IExpression<TResult>? result)
+        public static bool TryParse(string expression, out IExpression<TOperand>? result)
         {
             try
             {
@@ -86,10 +86,10 @@ namespace CalcEngine.IO
         /// <param name="expression">式文字列</param>
         /// <returns>解析結果の式木</returns>
         /// <exception cref="SyntaxErrorException"></exception>
-        public static IExpression<TResult> Parse(string expression)
+        public static IExpression<TOperand> Parse(string expression)
         {
             Debug.WriteLine($"Parse: 開始 \"{expression}\"");
-            var operandStack = new Stack<IExpression<TResult>>();
+            var operandStack = new Stack<IExpression<TOperand>>();
             var operatorStack = new Stack<IOperator>();
 
             // 式をトークンに分割
@@ -117,24 +117,24 @@ namespace CalcEngine.IO
         /// <param name="nest">解析のネスト数</param>
         /// <returns></returns>
         /// <exception cref="SyntaxErrorException"></exception>
-        public static IExpression<TResult> Parse(List<string> tokens, int nest)
+        public static IExpression<TOperand> Parse(List<string> tokens, int nest)
         {
-            var operandStack = new Stack<IExpression<TResult>>();
+            var operandStack = new Stack<IExpression<TOperand>>();
             var operatorStack = new Stack<IOperator>();
 
             for (int index = 0; index < tokens.Count; index++)
             {
                 var token = tokens.ElementAt(index);
-                if (TryParseToken(token, out TResult number))
+                if (TryParseToken(token, out TOperand number))
                 {
                     // 数値の場合はオペランドスタックに追加
-                    IExpression<TResult> constantExpression = new ConstantExpression<TResult>(number);
+                    IExpression<TOperand> constantExpression = new ConstantExpression<TOperand>(number);
 
-                    if (operandStack.Count == 0 && operatorStack.Any() && operatorStack.Peek() is UnaryOperator<TResult, TResult> unaryOperator)
+                    if (operandStack.Count == 0 && operatorStack.Any() && operatorStack.Peek() is UnaryOperator<TOperand, TOperand> unaryOperator)
                     {
                         // 左のオペランドなしで単項演算子がある場合は適用
                         operatorStack.Pop();
-                        constantExpression = new UnaryExpression<TResult>(constantExpression, unaryOperator);
+                        constantExpression = new UnaryExpression<TOperand>(constantExpression, unaryOperator);
                     }
 
                     operandStack.Push(constantExpression);
@@ -147,7 +147,7 @@ namespace CalcEngine.IO
 
                     // 切り出したトークンを再帰的に解析
                     var innerExpression = Parse(innerTokens, nest + 1);
-                    var expression = new ParenthesisExpression<TResult>(innerExpression);
+                    var expression = new ParenthesisExpression<TOperand>(innerExpression);
 
                     operandStack.Push(expression);
                     Debug.WriteLine($"Parse[{nest}-{index}]: 括弧式 = \"{expression}\"");
@@ -205,7 +205,7 @@ namespace CalcEngine.IO
         public static IExpression<bool> ParseComparison(string expression)
         {
             Debug.WriteLine($"ParseComparison: 開始 \"{expression}\"");
-            var operandStack = new Stack<IExpression<TResult>>();
+            var operandStack = new Stack<IExpression<TOperand>>();
             var operatorStack = new Stack<IOperator>();
 
             // 式をトークンに分割
@@ -228,7 +228,7 @@ namespace CalcEngine.IO
 
         private static IExpression<bool> ParseComparison(List<string> tokens, int nest)
         {
-            var operandStack = new Stack<IExpression<TResult>>();
+            var operandStack = new Stack<IExpression<TOperand>>();
             var operatorStack = new Stack<IOperator>();
 
             // 比較演算子のインデックスを探す
@@ -250,7 +250,7 @@ namespace CalcEngine.IO
             // 右側のトークンを解析
             var rightExpression = Parse(rightTokens, nest + 1);
 
-            return new ComparisonExpression<TResult>(leftExpression, rightExpression, comparisonOperator);
+            return new ComparisonExpression<TOperand>(leftExpression, rightExpression, comparisonOperator);
         }
 
         /// <summary>
@@ -324,11 +324,11 @@ namespace CalcEngine.IO
         }
 
         // トークンを数値に変換するメソッド
-        private static bool TryParseToken(string token, out TResult result)
+        private static bool TryParseToken(string token, out TOperand result)
         {
             try
             {
-                result = (TResult)Convert.ChangeType(token, typeof(TResult));
+                result = (TOperand)Convert.ChangeType(token, typeof(TOperand));
                 return true;
             }
             catch
@@ -339,9 +339,9 @@ namespace CalcEngine.IO
         }
 
         // 演算子を適用するメソッド
-        private static void ApplyOperator(Stack<IExpression<TResult>> operandStack, IOperator operatorSymbol)
+        private static void ApplyOperator(Stack<IExpression<TOperand>> operandStack, IOperator operatorSymbol)
         {
-            if (operatorSymbol is UnaryOperator<TResult, TResult> unaryOperator)
+            if (operatorSymbol is UnaryOperator<TOperand, TOperand> unaryOperator)
             {
                 if (operandStack.Count < 1)
                 {
@@ -349,13 +349,13 @@ namespace CalcEngine.IO
                 }
 
                 var operand = operandStack.Pop();
-                var expression = new UnaryExpression<TResult>(operand, unaryOperator);
+                var expression = new UnaryExpression<TOperand>(operand, unaryOperator);
 
                 operandStack.Push(expression);
                 return;
             }
 
-            if (operatorSymbol is BinaryOperator<TResult, TResult> binaryOperator)
+            if (operatorSymbol is BinaryOperator<TOperand, TOperand> binaryOperator)
             {
                 if (operandStack.Count < 2)
                 {
@@ -364,7 +364,7 @@ namespace CalcEngine.IO
 
                 var right = operandStack.Pop();
                 var left = operandStack.Pop();
-                var expression = new ArithmeticExpression<TResult>(left, right, binaryOperator);
+                var expression = new ArithmeticExpression<TOperand>(left, right, binaryOperator);
 
                 operandStack.Push(expression);
                 return;
@@ -379,7 +379,7 @@ namespace CalcEngine.IO
 
                 var innerExpression = operandStack.Pop();
 
-                var expression = new ParenthesisExpression<TResult>(innerExpression);
+                var expression = new ParenthesisExpression<TOperand>(innerExpression);
 
                 operandStack.Push(expression);
                 return;
