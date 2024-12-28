@@ -168,13 +168,6 @@ namespace CalcEngine.Test
             expression = ExpressionParser<bool>.ParseLogical("真·偽");
             Assert.IsFalse(expression.Evaluate());
 
-            // ≔ 演算子のテスト
-            expression = ExpressionParser<bool>.ParseLogical("true ≔ true");
-            Assert.IsTrue(expression.Evaluate());
-
-            expression = ExpressionParser<bool>.ParseLogical("true ≔ false");
-            Assert.IsFalse(expression.Evaluate());
-
             // ∧ 演算子のテスト
             expression = ExpressionParser<bool>.ParseLogical("true ∧ true");
             Assert.IsTrue(expression.Evaluate());
@@ -226,17 +219,20 @@ namespace CalcEngine.Test
 
             // ⊄ 演算子のテスト
             expression = ExpressionParser<bool>.ParseLogical("true ⊄ false");
-            Assert.IsTrue(expression.Evaluate());
+            Assert.IsFalse(expression.Evaluate());
 
             expression = ExpressionParser<bool>.ParseLogical("true ⊄ true");
             Assert.IsFalse(expression.Evaluate());
 
-            // ↚ 演算子のテスト
-            expression = ExpressionParser<bool>.ParseLogical("true ↚ false");
+            expression = ExpressionParser<bool>.ParseLogical("false ⊄ true");
             Assert.IsTrue(expression.Evaluate());
 
-            expression = ExpressionParser<bool>.ParseLogical("false ↚ true");
+            // ↚ 演算子のテスト
+            expression = ExpressionParser<bool>.ParseLogical("true ↚ false");
             Assert.IsFalse(expression.Evaluate());
+
+            expression = ExpressionParser<bool>.ParseLogical("false ↚ true");
+            Assert.IsTrue(expression.Evaluate());
 
             // ← 演算子のテスト
             expression = ExpressionParser<bool>.ParseLogical("true ← false");

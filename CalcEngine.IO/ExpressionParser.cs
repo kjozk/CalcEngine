@@ -62,47 +62,50 @@ namespace CalcEngine.IO
         /// </summary>
         private static readonly List<BinaryOperator<bool, bool>> LogicalOperators = new List<BinaryOperator<bool, bool>>
             {
-                new BinaryOperator<bool, bool>("∧", 0, (a, b) => a && b), // 論理積
-                new BinaryOperator<bool, bool>("∨", 0, (a, b) => a || b), // 論理和
-                new BinaryOperator<bool, bool>("AND", 0, (a, b) => a && b), // 論理積
-                new BinaryOperator<bool, bool>("OR", 0, (a, b) => a || b), // 論理和
-                new BinaryOperator<bool, bool>("XOR", 0, (a, b) => a ^ b),  // 排他的論理和
-                new BinaryOperator<bool, bool>("&&", 0, (a, b) => a && b), // 論理積
-                new BinaryOperator<bool, bool>("||", 0, (a, b) => a || b), // 論理和
-                new BinaryOperator<bool, bool>("NOR", 0, (a, b) => !(a || b)), // 否定論理和
-                new BinaryOperator<bool, bool>("NAND", 0, (a, b) => !(a && b)), // 否定論理積
-                new BinaryOperator<bool, bool>("⊅", 0, (a, b) => a && !b), // 非含意
-                new BinaryOperator<bool, bool>("↛", 0, (a, b) => a && !b), // 非含意
-                new BinaryOperator<bool, bool>("⊃", 0, (a, b) => !a || b), // 含意
-                new BinaryOperator<bool, bool>("↑", 0, (a, b) => !(a && b)), // 否定論理積
-                new BinaryOperator<bool, bool>("⊄", 0, (a, b) => a && !b), // 逆非含意
-                new BinaryOperator<bool, bool>("↚", 0, (a, b) => a && !b), // 逆非含意
-                new BinaryOperator<bool, bool>("←", 0, (a, b) => b), // 含意
-                new BinaryOperator<bool, bool>("⊂", 0, (a, b) => !a && b), // 否定論理積
-                new BinaryOperator<bool, bool>("P↮", 0, (a, b) => a != b), // 不等
-                new BinaryOperator<bool, bool>("≢", 0, (a, b) => a != b), // 不等
-                new BinaryOperator<bool, bool>("⊕", 0, (a, b) => a ^ b),  // 排他的論理和
-                new BinaryOperator<bool, bool>("⊻", 0, (a, b) => a ^ b),  // 排他的論理和
-                new BinaryOperator<bool, bool>("↔", 0, (a, b) => a == b), // 同値
-                new BinaryOperator<bool, bool>("≡", 0, (a, b) => a == b), // 同値
-                new BinaryOperator<bool, bool>("XNOR", 0, (a, b) => a == b), // 否定排他的論理和
-                new BinaryOperator<bool, bool>("IFF", 0, (a, b) => a == b), // 同値
-                new BinaryOperator<bool, bool>("↓", 0, (a, b) => !(a || b)), // 否定論理和
-                new BinaryOperator<bool, bool>("IMPLIES", 0, (a, b) => !a || b), // 含意
-                new BinaryOperator<bool, bool>("EQUIV", 0, (a, b) => a == b), // 同値
-                new BinaryOperator<bool, bool>("⇔", 0, (a, b) => a == b), // 同値
-                new BinaryOperator<bool, bool>("∥", 0, (a, b) => a || b), // 論理和
-                new BinaryOperator<bool, bool>("+", 0, (a, b) => a || b), // 論理和
-                new BinaryOperator<bool, bool>("·", 0, (a, b) => a && b), // 論理積
-                new BinaryOperator<bool, bool>("≔", 0, (a, b) => a == b), // 同値
+                new BinaryOperator<bool, bool>("∧", 0, (p, q) => p && q), // 論理積
+                new BinaryOperator<bool, bool>("∨", 0, (p, q) => p || q), // 論理和
+                new BinaryOperator<bool, bool>("AND", 0, (p, q) => p && q), // 論理積
+                new BinaryOperator<bool, bool>("OR", 0, (p, q) => p || q), // 論理和
+                new BinaryOperator<bool, bool>("NAND", 0, (p, q) => !(p && q)), // 否定論理積
+                new BinaryOperator<bool, bool>("NOR", 0, (p, q) => !(p || q)), // 否定論理和
+                new BinaryOperator<bool, bool>("XOR", 0, (p, q) => p ^ q),  // 排他的論理和
+                new BinaryOperator<bool, bool>("&", 0, (p, q) => p && q), // 論理積
+                new BinaryOperator<bool, bool>("|", 0, (p, q) => p || q), // 論理和
+                new BinaryOperator<bool, bool>("↑", 0, (p, q) => !(p && q)), // 否定論理積
+                new BinaryOperator<bool, bool>("⊅", 0, (p, q) => p && !q), // 非含意
+                new BinaryOperator<bool, bool>("↛", 0, (p, q) => p && !q), // 非含意
+                new BinaryOperator<bool, bool>("⊃", 0, (p, q) => !p || q), // 含意
+                new BinaryOperator<bool, bool>("→", 0, (p, q) => !p || q), // 含意
+                new BinaryOperator<bool, bool>("⇒", 0, (p, q) => !p || q), // 含意
+                new BinaryOperator<bool, bool>("IMPLIES", 0, (p, q) => !p || q), // 含意
+                new BinaryOperator<bool, bool>("⊄", 0, (p, q) => !p && q), // 逆非含意
+                new BinaryOperator<bool, bool>("↚", 0, (p, q) => !p && q), // 逆非含意
+                new BinaryOperator<bool, bool>("←", 0, (p, q) => q || !p), // 逆含意
+                new BinaryOperator<bool, bool>("⊂", 0, (p, q) => q || !p), // 逆含意
+
+                new BinaryOperator<bool, bool>("↔", 0, (p, q) => p == q), // 同値
+                new BinaryOperator<bool, bool>("≡", 0, (p, q) => p == q), // 同値
+                new BinaryOperator<bool, bool>("IFF", 0, (p, q) => p == q), // 同値
+                new BinaryOperator<bool, bool>("⇔", 0, (p, q) => p == q), // 同値
+                new BinaryOperator<bool, bool>("EQUIV", 0, (p, q) => p == q), // 同値
+                new BinaryOperator<bool, bool>("↮", 0, (p, q) => p != q), // 不等
+                new BinaryOperator<bool, bool>("≢", 0, (p, q) => p != q), // 不等
+                new BinaryOperator<bool, bool>("⊕", 0, (p, q) => p ^ q),  // 排他的論理和
+                new BinaryOperator<bool, bool>("⊻", 0, (p, q) => p ^ q),  // 排他的論理和
+                new BinaryOperator<bool, bool>("XNOR", 0, (p, q) => p == q), // 否定排他的論理和
+                new BinaryOperator<bool, bool>("↓", 0, (p, q) => !(p || q)), // 否定論理和
+
+                new BinaryOperator<bool, bool>("∥", 0, (p, q) => p || q), // 論理和
+                new BinaryOperator<bool, bool>("+", 0, (p, q) => p || q), // 論理和
+                new BinaryOperator<bool, bool>("·", 0, (p, q) => p && q), // 論理積
             };
 
         private static readonly List<UnaryOperator<bool, bool>> UnaryLogicalOperators = new List<UnaryOperator<bool, bool>>
             {
-                new UnaryOperator<bool, bool>("¬", 4, a => !a), // 否定
-                new UnaryOperator<bool, bool>("NOT", 4, a => !a), // 否定
-                new UnaryOperator<bool, bool>("˜", 4, a => !a), // 否定
-                new UnaryOperator<bool, bool>("!", 4, a => !a), // 否定
+                new UnaryOperator<bool, bool>("¬", 4, p => !p), // 否定
+                new UnaryOperator<bool, bool>("NOT", 4, p => !p), // 否定
+                new UnaryOperator<bool, bool>("˜", 4, p => !p), // 否定
+                new UnaryOperator<bool, bool>("!", 4, p => !p), // 否定
             };
 
         /// <summary>
