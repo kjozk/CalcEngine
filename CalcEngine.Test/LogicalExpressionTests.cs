@@ -1,4 +1,5 @@
 using CalcEngine.IO;
+using System.Linq.Expressions;
 
 namespace CalcEngine.Test
 {
@@ -26,6 +27,18 @@ namespace CalcEngine.Test
             // false AND false = false
             expression = ExpressionParser<bool>.ParseLogical("false AND false");
             Assert.IsFalse(expression.Evaluate());
+
+            // 真 ∧ 真 = 真
+            expression = ExpressionParser<bool>.ParseLogical("真 ∧ 真");
+            Assert.IsTrue(expression.Evaluate());
+
+            // true & true = true
+            expression = ExpressionParser<bool>.ParseLogical("true & true");
+            Assert.IsTrue(expression.Evaluate());
+
+            // 真 · 偽 = 真
+            expression = ExpressionParser<bool>.ParseLogical("真 · 偽");
+            Assert.IsFalse(expression.Evaluate());
         }
 
         // OR演算のテストケース
@@ -49,6 +62,14 @@ namespace CalcEngine.Test
             // false OR false = false
             expression = ExpressionParser<bool>.ParseLogical("false OR false");
             Assert.IsFalse(expression.Evaluate());
+
+            // 真 OR 偽 = 真
+            expression = ExpressionParser<bool>.ParseLogical("真 ∨ 偽");
+            Assert.IsTrue(expression.Evaluate());
+
+            // 偽 + 真 = 真
+            expression = ExpressionParser<bool>.ParseLogical("偽 + 真");
+            Assert.IsTrue(expression.Evaluate());
         }
 
         // NOT演算のテストケース
@@ -117,6 +138,72 @@ namespace CalcEngine.Test
 
             // (true OR false) AND NOT false = true
             expression = ExpressionParser<bool>.ParseLogical("(true OR false) AND NOT false");
+            Assert.IsTrue(expression.Evaluate());
+        }
+
+        /// <summary>
+        /// 非含意のテストケース
+        /// </summary>
+        [TestMethod]
+        public void NonImplicationLogicalOperatorsTest()
+        {
+            IExpression<bool> expression;
+
+            expression = ExpressionParser<bool>.ParseLogical("真↛真");
+            Assert.IsFalse(expression.Evaluate());
+
+            expression = ExpressionParser<bool>.ParseLogical("真↛偽");
+            Assert.IsTrue(expression.Evaluate());
+
+            expression = ExpressionParser<bool>.ParseLogical("偽↛真");
+            Assert.IsFalse(expression.Evaluate());
+
+            expression = ExpressionParser<bool>.ParseLogical("偽↛偽");
+            Assert.IsFalse(expression.Evaluate());
+
+            expression = ExpressionParser<bool>.ParseLogical("真⊅真");
+            Assert.IsFalse(expression.Evaluate());
+
+            expression = ExpressionParser<bool>.ParseLogical("真⊅偽");
+            Assert.IsTrue(expression.Evaluate());
+
+            expression = ExpressionParser<bool>.ParseLogical("偽⊅真");
+            Assert.IsFalse(expression.Evaluate());
+
+            expression = ExpressionParser<bool>.ParseLogical("偽⊅偽");
+            Assert.IsFalse(expression.Evaluate());
+        }
+
+        /// <summary>
+        /// 含意のテストケース
+        /// </summary>
+        [TestMethod]
+        public void ImplicationLogicalOperatorsTest()
+        {
+            IExpression<bool> expression;
+
+            expression = ExpressionParser<bool>.ParseLogical("真→真");
+            Assert.IsTrue(expression.Evaluate());
+
+            expression = ExpressionParser<bool>.ParseLogical("真→偽");
+            Assert.IsFalse(expression.Evaluate());
+
+            expression = ExpressionParser<bool>.ParseLogical("偽→真");
+            Assert.IsTrue(expression.Evaluate());
+
+            expression = ExpressionParser<bool>.ParseLogical("偽→偽");
+            Assert.IsTrue(expression.Evaluate());
+
+            expression = ExpressionParser<bool>.ParseLogical("真⊃真");
+            Assert.IsTrue(expression.Evaluate());
+
+            expression = ExpressionParser<bool>.ParseLogical("真⊃偽");
+            Assert.IsFalse(expression.Evaluate());
+
+            expression = ExpressionParser<bool>.ParseLogical("偽⊃真");
+            Assert.IsTrue(expression.Evaluate());
+
+            expression = ExpressionParser<bool>.ParseLogical("偽⊃偽");
             Assert.IsTrue(expression.Evaluate());
         }
 
